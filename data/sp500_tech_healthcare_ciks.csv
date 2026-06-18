@@ -1,0 +1,132 @@
+ticker,name,sector,cik
+ABT,Abbott Laboratories,Health Care,0000001800
+ABBV,AbbVie,Health Care,0001551152
+ACN,Accenture,Information Technology,0001467373
+ADBE,Adobe Inc.,Information Technology,0000796343
+AMD,Advanced Micro Devices,Information Technology,0000002488
+A,Agilent Technologies,Health Care,0001090872
+AKAM,Akamai Technologies,Information Technology,0001086222
+ALGN,Align Technology,Health Care,0001097149
+AMGN,Amgen,Health Care,0000318154
+APH,Amphenol,Information Technology,0000820313
+ADI,Analog Devices,Information Technology,0000006281
+AAPL,Apple Inc.,Information Technology,0000320193
+AMAT,Applied Materials,Information Technology,0000006951
+APP,AppLovin,Information Technology,0001751008
+ANET,Arista Networks,Information Technology,0001596532
+ADSK,Autodesk,Information Technology,0000769397
+BAX,Baxter International,Health Care,0000010456
+BDX,Becton Dickinson,Health Care,0000010795
+TECH,Bio-Techne,Health Care,0000842023
+BIIB,Biogen,Health Care,0000875045
+BSX,Boston Scientific,Health Care,0000885725
+BMY,Bristol Myers Squibb,Health Care,0000014272
+AVGO,Broadcom,Information Technology,0001730168
+CDNS,Cadence Design Systems,Information Technology,0000813672
+CAH,Cardinal Health,Health Care,0000721371
+CDW,CDW Corporation,Information Technology,0001402057
+COR,Cencora,Health Care,0001140859
+CNC,Centene Corporation,Health Care,0001071739
+CRL,Charles River Laboratories,Health Care,0001100682
+CIEN,Ciena,Information Technology,0000936395
+CI,Cigna,Health Care,0001739940
+CSCO,Cisco,Information Technology,0000858877
+CTSH,Cognizant,Information Technology,0001058290
+COHR,Coherent Corp.,Information Technology,0000820318
+COO,Cooper Companies (The),Health Care,0000711404
+GLW,Corning Inc.,Information Technology,0000024741
+CRWD,CrowdStrike,Information Technology,0001535527
+CVS,CVS Health,Health Care,0000064803
+DHR,Danaher Corporation,Health Care,0000313616
+DDOG,Datadog,Information Technology,0001561550
+DVA,DaVita,Health Care,0000927066
+DELL,Dell Technologies,Information Technology,0001571996
+DXCM,Dexcom,Health Care,0001093557
+EW,Edwards Lifesciences,Health Care,0001099800
+ELV,Elevance Health,Health Care,0001156039
+FFIV,"F5, Inc.",Information Technology,0001048695
+FICO,Fair Isaac,Information Technology,0000814547
+FSLR,First Solar,Information Technology,0001274494
+FTNT,Fortinet,Information Technology,0001262039
+IT,Gartner,Information Technology,0000749251
+GEHC,GE HealthCare,Health Care,0001932393
+GEN,Gen Digital,Information Technology,0000849399
+GILD,Gilead Sciences,Health Care,0000882095
+GDDY,GoDaddy,Information Technology,0001609711
+HCA,HCA Healthcare,Health Care,0000860730
+HSIC,Henry Schein,Health Care,0001000228
+HPE,Hewlett Packard Enterprise,Information Technology,0001645590
+HPQ,HP Inc.,Information Technology,0000047217
+HUM,Humana,Health Care,0000049071
+IBM,IBM,Information Technology,0000051143
+IDXX,Idexx Laboratories,Health Care,0000874716
+INCY,Incyte,Health Care,0000879169
+PODD,Insulet Corporation,Health Care,0001145197
+INTC,Intel,Information Technology,0000050863
+INTU,Intuit,Information Technology,0000896878
+ISRG,Intuitive Surgical,Health Care,0001035267
+IQV,IQVIA,Health Care,0001478242
+JBL,Jabil,Information Technology,0000898293
+JNJ,Johnson & Johnson,Health Care,0000200406
+KEYS,Keysight Technologies,Information Technology,0001601046
+KLAC,KLA Corporation,Information Technology,0000319201
+LH,Labcorp,Health Care,0000920148
+LRCX,Lam Research,Information Technology,0000707549
+LLY,Lilly (Eli),Health Care,0000059478
+LITE,Lumentum,Information Technology,0001633978
+MCK,McKesson Corporation,Health Care,0000927653
+MDT,Medtronic,Health Care,0001613103
+MRK,Merck & Co.,Health Care,0000310158
+MTD,Mettler Toledo,Health Care,0001037646
+MCHP,Microchip Technology,Information Technology,0000827054
+MU,Micron Technology,Information Technology,0000723125
+MSFT,Microsoft,Information Technology,0000789019
+MRNA,Moderna,Health Care,0001682852
+MPWR,Monolithic Power Systems,Information Technology,0001280452
+MSI,Motorola Solutions,Information Technology,0000068505
+NTAP,NetApp,Information Technology,0001002047
+NVDA,Nvidia,Information Technology,0001045810
+NXPI,NXP Semiconductors,Information Technology,0001413447
+ON,ON Semiconductor,Information Technology,0001097864
+ORCL,Oracle Corporation,Information Technology,0001341439
+PLTR,Palantir Technologies,Information Technology,0001321655
+PANW,Palo Alto Networks,Information Technology,0001327567
+PFE,Pfizer,Health Care,0000078003
+PTC,PTC Inc.,Information Technology,0000857005
+QCOM,Qualcomm,Information Technology,0000804328
+DGX,Quest Diagnostics,Health Care,0001022079
+Q,Qnity Electronics,Information Technology,0002058873
+REGN,Regeneron Pharmaceuticals,Health Care,0000872589
+RMD,ResMed,Health Care,0000943819
+RVTY,Revvity,Health Care,0000031791
+ROP,Roper Technologies,Information Technology,0000882835
+CRM,Salesforce,Information Technology,0001108524
+SNDK,Sandisk,Information Technology,0002023554
+STX,Seagate Technology,Information Technology,0001137789
+NOW,ServiceNow,Information Technology,0001373715
+SWKS,Skyworks Solutions,Information Technology,0000004127
+SOLV,Solventum,Health Care,0001964738
+STE,Steris,Health Care,0001757898
+SYK,Stryker Corporation,Health Care,0000310764
+SMCI,Supermicro,Information Technology,0001375365
+SNPS,Synopsys,Information Technology,0000883241
+TEL,TE Connectivity,Information Technology,0001385157
+TDY,Teledyne Technologies,Information Technology,0001094285
+TER,Teradyne,Information Technology,0000097210
+TXN,Texas Instruments,Information Technology,0000097476
+TMO,Thermo Fisher Scientific,Health Care,0000097745
+TRMB,Trimble Inc.,Information Technology,0000864749
+TYL,Tyler Technologies,Information Technology,0000860731
+UNH,UnitedHealth Group,Health Care,0000731766
+UHS,Universal Health Services,Health Care,0000352915
+VEEV,Veeva Systems,Health Care,0001393052
+VRSN,Verisign,Information Technology,0001014473
+VRTX,Vertex Pharmaceuticals,Health Care,0000875320
+VTRS,Viatris,Health Care,0001792044
+WAT,Waters Corporation,Health Care,0001000697
+WST,West Pharmaceutical Services,Health Care,0000105770
+WDC,Western Digital,Information Technology,0000106040
+WDAY,"Workday, Inc.",Information Technology,0001327811
+ZBRA,Zebra Technologies,Information Technology,0000877212
+ZBH,Zimmer Biomet,Health Care,0001136869
+ZTS,Zoetis,Health Care,0001555280
