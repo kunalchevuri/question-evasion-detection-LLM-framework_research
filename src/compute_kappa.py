@@ -40,6 +40,13 @@ def bin_scores(series):
     )
 
 
+def bin_codes(series):
+    # Ordinal integer codes (0..3) in BIN_LABELS order, required so that
+    # quadratic weighted kappa penalizes by correct ordinal distance
+    # instead of relying on alphabetical sorting of the string labels.
+    return bin_scores(series).cat.codes
+
+
 def main():
     try:
         df = pd.read_csv(INPUT_PATH)
@@ -83,16 +90,21 @@ def main():
     subset["evasion_score"] = pd.to_numeric(subset["evasion_score"], errors="coerce")
     subset = subset.dropna(subset=["evasion_score"])
 
-    subset["human1_bin"] = bin_scores(subset["human1_evasion_score"])
-    subset["human2_bin"] = bin_scores(subset["human2_evasion_score"])
-    subset["llm_bin"] = bin_scores(subset["evasion_score"] / 10.0)
+    subset["human1_bin_code"] = bin_codes(subset["human1_evasion_score"])
+    subset["human2_bin_code"] = bin_codes(subset["human2_evasion_score"])
+    subset["llm_bin_code"] = bin_codes(subset["evasion_score"] / 10.0)
 
     n_rows = len(subset)
+    bin_label_range = list(range(len(BIN_LABELS)))
 
     try:
-        kappa_h1_h2 = cohen_kappa_score(subset["human1_bin"], subset["human2_bin"])
-        kappa_llm_h1 = cohen_kappa_score(subset["llm_bin"], subset["human1_bin"])
-        kappa_llm_h2 = cohen_kappa_score(subset["llm_bin"], subset["human2_bin"])
+        kappa_h1_h2 = cohen_kappa_score(subset["human1_bin_code"], subset["human2_bin_code"], labels=bin_label_range)
+        kappa_llm_h1 = cohen_kappa_score(subset["llm_bin_code"], subset["human1_bin_code"], labels=bin_label_range)
+        kappa_llm_h2 = cohen_kappa_score(subset["llm_bin_code"], subset["human2_bin_code"], labels=bin_label_range)
+
+        qwk_h1_h2 = cohen_kappa_score(subset["human1_bin_code"], subset["human2_bin_code"], labels=bin_label_range, weights="quadratic")
+        qwk_llm_h1 = cohen_kappa_score(subset["llm_bin_code"], subset["human1_bin_code"], labels=bin_label_range, weights="quadratic")
+        qwk_llm_h2 = cohen_kappa_score(subset["llm_bin_code"], subset["human2_bin_code"], labels=bin_label_range, weights="quadratic")
 
         pearson_h1_h2, _ = pearsonr(subset["human1_evasion_score"], subset["human2_evasion_score"])
         pearson_llm_h1, _ = pearsonr(subset["evasion_score"] / 10.0, subset["human1_evasion_score"])
@@ -102,27 +114,49 @@ def main():
         sys.exit(1)
 
     comparisons = [
-        ("human1_vs_human2", kappa_h1_h2, pearson_h1_h2),
-        ("llm_vs_human1", kappa_llm_h1, pearson_llm_h1),
-        ("llm_vs_human2", kappa_llm_h2, pearson_llm_h2),
+        ("human1_vs_human2", kappa_h1_h2, qwk_h1_h2, pearson_h1_h2),
+        ("llm_vs_human1", kappa_llm_h1, qwk_llm_h1, pearson_llm_h1),
+        ("llm_vs_human2", kappa_llm_h2, qwk_llm_h2, pearson_llm_h2),
     ]
 
     print("\n--- Results ---")
+    print(
+        "Note: quadratic weighted kappa is the more appropriate statistic here "
+        "because the evasion categories are ordinal "
+        "(very_direct < mostly_direct < evasive < very_evasive). It penalizes "
+        "adjacent-category disagreements less than opposite-end disagreements, "
+        "which unweighted kappa does not account for."
+    )
+
     lines = []
     lines.append("Inter-annotator agreement statistics")
     lines.append(f"Rows used (both human scores present and numeric): {n_rows}")
     lines.append("")
+    lines.append(
+        "Note: quadratic weighted kappa is the more appropriate statistic here "
+        "because the evasion categories are ordinal "
+        "(very_direct < mostly_direct < evasive < very_evasive). It penalizes "
+        "adjacent-category disagreements less than opposite-end disagreements, "
+        "which unweighted kappa does not account for."
+    )
+    lines.append("")
 
     results_rows = []
-    for name, kappa, r in comparisons:
+    for name, kappa, qwk, r in comparisons:
         interpretation = interpret_kappa(kappa)
-        line = (f"{name}: Cohen's kappa = {kappa:.4f} ({interpretation}), "
-                f"Pearson r = {r:.4f}, n = {n_rows}")
+        qwk_interpretation = interpret_kappa(qwk)
+        line = (
+            f"{name}: "
+            f"Unweighted kappa = {kappa:.4f} ({interpretation}); "
+            f"Quadratic weighted kappa = {qwk:.4f} ({qwk_interpretation}); "
+            f"Pearson r = {r:.4f}; n = {n_rows}"
+        )
         print(line)
         lines.append(line)
         results_rows.append({
             "comparison": name,
             "kappa": kappa,
+            "quadratic_kappa": qwk,
             "pearson_r": r,
             "n_rows": n_rows,
             "interpretation": interpretation,
