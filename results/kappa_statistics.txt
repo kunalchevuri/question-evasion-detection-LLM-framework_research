@@ -1,0 +1,8 @@
+Inter-annotator agreement statistics
+Rows used (both human scores present and numeric): 75
+
+Note: quadratic weighted kappa is the more appropriate statistic here because the evasion categories are ordinal (very_direct < mostly_direct < evasive < very_evasive). It penalizes adjacent-category disagreements less than opposite-end disagreements, which unweighted kappa does not account for.
+
+human1_vs_human2: Unweighted kappa = 0.2374 (poor agreement); Quadratic weighted kappa = 0.3823 (poor agreement); Pearson r = 0.5873; n = 75
+llm_vs_human1: Unweighted kappa = 0.2718 (poor agreement); Quadratic weighted kappa = 0.4480 (moderate agreement); Pearson r = 0.7767; n = 75
+llm_vs_human2: Unweighted kappa = 0.4502 (moderate agreement); Quadratic weighted kappa = 0.6095 (substantial agreement); Pearson r = 0.8030; n = 75
