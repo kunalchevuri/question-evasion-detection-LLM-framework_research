@@ -1,0 +1,196 @@
+ROBUSTNESS CHECKS -- run before writing up the Day 6 modeling result
+
+
+======================================================================
+TASK 1: 5-fold stratified cross-validation, Config B vs Config C
+======================================================================
+
+--- Fold 1 (train n=72, test n=19) ---
+  Config B: LR AUROC=0.5000   XGB AUROC=0.3667
+  Config C: LR AUROC=0.6333   XGB AUROC=0.4000
+
+--- Fold 2 (train n=73, test n=18) ---
+  Config B: LR AUROC=0.4938   XGB AUROC=0.5432
+  Config C: LR AUROC=0.6049   XGB AUROC=0.4321
+
+--- Fold 3 (train n=73, test n=18) ---
+  Config B: LR AUROC=0.5062   XGB AUROC=0.3210
+  Config C: LR AUROC=0.5185   XGB AUROC=0.3827
+
+--- Fold 4 (train n=73, test n=18) ---
+  Config B: LR AUROC=0.5679   XGB AUROC=0.6543
+  Config C: LR AUROC=0.5802   XGB AUROC=0.6049
+
+--- Fold 5 (train n=73, test n=18) ---
+  Config B: LR AUROC=0.2750   XGB AUROC=0.4375
+  Config C: LR AUROC=0.2000   XGB AUROC=0.4125
+
+--- Per-fold AUROC values ---
+Config B / LogisticRegression: [0.5000, 0.4938, 0.5062, 0.5679, 0.2750]
+Config B / XGBoost: [0.3667, 0.5432, 0.3210, 0.6543, 0.4375]
+Config C / LogisticRegression: [0.6333, 0.6049, 0.5185, 0.5802, 0.2000]
+Config C / XGBoost: [0.4000, 0.4321, 0.3827, 0.6049, 0.4125]
+
+--- Mean +/- SD across 5 folds ---
+Config B / LogisticRegression: mean=0.4686  sd=0.1122
+Config B / XGBoost: mean=0.4645  sd=0.1352
+Config C / LogisticRegression: mean=0.5074  sd=0.1770
+Config C / XGBoost: mean=0.4465  sd=0.0904
+
+--- Config C minus Config B, per fold, paired t-test ---
+LogisticRegression: per-fold (C - B) = [+0.1333, +0.1111, +0.0123, +0.0123, -0.0750]
+LogisticRegression: mean diff = +0.0388   paired t-test: t=1.0283, p=0.3619
+XGBoost: per-fold (C - B) = [+0.0333, -0.1111, +0.0617, -0.0494, -0.0250]
+XGBoost: mean diff = -0.0181   paired t-test: t=-0.5916, p=0.5860
+
+--- Interpretation ---
+Day 6 single-split result: LR AUROC improved B(0.624)->C(0.682); XGBoost went B(0.447)->C(0.435), both below chance. Cross-validation here shows: LR mean B=0.4686 (sd=0.1122) -> C=0.5074 (sd=0.1770); XGBoost mean B=0.4645 (sd=0.1352) -> C=0.4465 (sd=0.0904). Fold-to-fold standard deviations this large relative to the mean-difference-of-interest indicate the single 70/30 split result is NOT a stable estimate -- a different split of the same 91 rows can and does produce a materially different AUROC ranking across configs. This cross-validation should be read as evidence that the Day 6 single-split numbers are fragile, not as a replication of them.
+
+======================================================================
+TASK 2: Raw correlation, evasion features vs car_3day (full sample, n=91)
+======================================================================
+           feature  n  pearson_r  pearson_p  spearman_r  spearman_p
+mean_evasion_score 91  -0.198868   0.058787   -0.179149    0.089296
+  evasion_variance 91   0.041062   0.699159   -0.006968    0.947734
+ max_evasion_score 91  -0.120839   0.253876   -0.115016    0.277646
+
+======================================================================
+TASK 3: Sensitivity check excluding 2020 (COVID year)
+======================================================================
+Rows in 2020: 23
+Rows remaining after excluding 2020: 68 (91 - 23 = 68)
+
+--- Config B vs C AUROC, COVID-excluded subset ---
+Config B: LR AUROC=0.4945   XGB AUROC=0.5385
+Config C: LR AUROC=0.6374   XGB AUROC=0.5495
+
+--- Correlation, evasion features vs car_3day, COVID-excluded subset ---
+
+======================================================================
+TASK 2: Raw correlation, evasion features vs car_3day (COVID-excluded, n=68)
+======================================================================
+           feature  n  pearson_r  pearson_p  spearman_r  spearman_p
+mean_evasion_score 68  -0.226503   0.063257   -0.201764    0.098952
+  evasion_variance 68   0.152164   0.215441    0.061194    0.620085
+ max_evasion_score 68  -0.044468   0.718792   -0.052802    0.668913
+
+--- Side-by-side comparison ---
+Metric                                  Full sample (n=91)    Excluding 2020 (n=68)
+Config B LR AUROC                            0.6235                0.4945
+Config B XGB AUROC                           0.4471                0.5385
+Config C LR AUROC                            0.6824                0.6374
+Config C XGB AUROC                           0.4353                0.5495
+
+--- Interpretation ---
+Excluding 2020 shifts Config C AUROC by -0.0450 (LR) and +0.1142 (XGBoost) relative to the full-sample Day 6 numbers. This is a large enough shift that 2020 appears to be materially influencing the result -- worth flagging as a limitation.
+
+======================================================================
+TASK 4: Minimum detectable AUROC difference given our sample size
+======================================================================
+statsmodels has no direct AUROC-difference power function, and is not installed in this environment; using the simulation-based approach it offers as a fallback: a binormal model (positive-class scores ~ N(mu,1), negative-class scores ~ N(0,1), so AUROC = Phi(mu/sqrt(2))) generates synthetic classifier scores with a controlled TRUE AUROC gap, then the exact Day 6 bootstrap-CI procedure (1000 resamples) is applied to each simulated dataset to see how often it correctly flags a significant difference. Power = detection rate across 1000 simulated datasets per effect size (AUC computed via a vectorized rank-sum identity rather than sklearn.roc_auc_score per resample, verified to match it exactly -- this keeps the full grid of 1000 outer sims x 1000 inner bootstrap x 4 effect sizes x 2 sample sizes tractable).
+
+--- n_test=27, matching the Day 6 single 70/30 split ---
+  True AUROC difference = 0.02  ->  power = 0.056
+  True AUROC difference = 0.05  ->  power = 0.064
+  True AUROC difference = 0.10  ->  power = 0.113
+  True AUROC difference = 0.15  ->  power = 0.182
+
+--- n=91, matching the full-sample / cross-validation framing ---
+  True AUROC difference = 0.02  ->  power = 0.067
+  True AUROC difference = 0.05  ->  power = 0.100
+  True AUROC difference = 0.10  ->  power = 0.226
+  True AUROC difference = 0.15  ->  power = 0.444
+
+--- Minimum detectable effect (first tested delta reaching >= 0.80 power) ---
+At n_test=27, matching the Day 6 single 70/30 split: none of the tested effect sizes [0.02, 0.05, 0.1, 0.15] reached 80% power -- the true minimum detectable effect is larger than 0.15.
+At n=91, matching the full-sample / cross-validation framing: none of the tested effect sizes [0.02, 0.05, 0.1, 0.15] reached 80% power -- the true minimum detectable effect is larger than 0.15.
+
+Given our sample size, we had adequate power to detect AUROC differences at or above the smallest delta reaching 80% power in the table above, but NOT smaller differences than that. Since the Day 6 raw AUROC difference (Config C vs B, XGBoost) was only -0.012 and for LogisticRegression only +0.059 -- both well below typical minimum-detectable-effect sizes at this n -- this study was structurally underpowered to detect an effect of the size actually observed, which is independent confirmation that a null/non-significant bootstrap CI was the expected outcome here, not evidence of a well-powered null result.
+
+======================================================================
+TASK 5: Sector composition of the panel (SEC SIC codes)
+======================================================================
+Resolved CIK for 26 of 26 companies
+
+Fetching SIC codes from SEC submissions API...
+  AFIB   SIC=3841   sector=Healthcare/Biotech   n_obs=1  (Surgical & Medical Instruments & Apparatus)
+  ANF    SIC=5651   sector=Consumer/Retail      n_obs=1  (Retail-Family Clothing Stores)
+  CASY   SIC=5500   sector=Consumer/Retail      n_obs=3  (Retail-Auto Dealers & Gasoline Stations)
+  CBZ    SIC=7389   sector=Services/Other       n_obs=5  (Services-Business Services, NEC)
+  DXC    SIC=7374   sector=Technology           n_obs=1  (Services-Computer Processing & Data Preparation)
+  FCN    SIC=8742   sector=Services/Other       n_obs=17  (Services-Management Consulting Services)
+  FPI    SIC=6798   sector=Real Estate          n_obs=1  (Real Estate Investment Trusts)
+  GEF    SIC=3412   sector=Industrials          n_obs=12  (Metal Shipping Barrels, Drums, Kegs & Pails)
+  ILMN   SIC=3826   sector=Healthcare/Biotech   n_obs=1  (Laboratory Analytical Instruments)
+  LCII   SIC=3714   sector=Industrials          n_obs=5  (Motor Vehicle Parts & Accessories)
+  LGMK   SIC=3842   sector=Healthcare/Biotech   n_obs=1  (Orthopedic, Prosthetic & Surgical Appliances & Supplies)
+  MRAM   SIC=3674   sector=Technology           n_obs=1  (Semiconductors & Related Devices)
+  MSTR   SIC=6199   sector=Financial Services   n_obs=1  (Finance Services)
+  MYO    SIC=3842   sector=Healthcare/Biotech   n_obs=1  (Orthopedic, Prosthetic & Surgical Appliances & Supplies)
+  NBIX   SIC=2836   sector=Healthcare/Biotech   n_obs=1  (Biological Products, (No Diagnostic Substances))
+  PATK   SIC=3714   sector=Industrials          n_obs=6  (Motor Vehicle Parts & Accessories)
+  RGR    SIC=3480   sector=Industrials          n_obs=18  (Ordnance & Accessories, (No Vehicles/Guided Missiles))
+  SBFG   SIC=6022   sector=Financial Services   n_obs=3  (State Commercial Banks)
+  SPXC   SIC=3540   sector=Industrials          n_obs=1  (Metalworkg Machinery & Equipment)
+  STAA   SIC=3851   sector=Healthcare/Biotech   n_obs=3  (Ophthalmic Goods)
+  SWBI   SIC=3480   sector=Industrials          n_obs=1  (Ordnance & Accessories, (No Vehicles/Guided Missiles))
+  SYRS   SIC=2834   sector=Healthcare/Biotech   n_obs=1  (Pharmaceutical Preparations)
+  TALO   SIC=1311   sector=Energy               n_obs=2  (Crude Petroleum & Natural Gas)
+  TDW    SIC=4400   sector=Industrials          n_obs=1  (Water Transportation)
+  VISN   SIC=3663   sector=Technology           n_obs=1  (Radio & Tv Broadcasting & Communications Equipment)
+  WATT   SIC=3663   sector=Technology           n_obs=2  (Radio & Tv Broadcasting & Communications Equipment)
+
+--- Sector summary table ---
+            sector  n_companies  n_observations
+       Industrials            7              44
+    Services/Other            2              22
+Healthcare/Biotech            7               9
+        Technology            4               5
+   Consumer/Retail            2               4
+Financial Services            2               4
+            Energy            1               2
+       Real Estate            1               1
+
+Saved C:\Users\ckche\OneDrive\Documents\question-evasion-detection-LLM-framework_research\results\sample_composition.csv
+
+======================================================================
+TASK 6: Company clustering / concentration check
+======================================================================
+Companies with 1 observation:    15
+Companies with 2-5 observations: 7
+Companies with 6+ observations:  4
+Total companies: 26, total observations: 91
+
+Full per-company observation counts:
+company_ticker
+RGR     18
+FCN     17
+GEF     12
+PATK     6
+LCII     5
+CBZ      5
+STAA     3
+SBFG     3
+CASY     3
+TALO     2
+WATT     2
+ILMN     1
+DXC      1
+ANF      1
+AFIB     1
+FPI      1
+MYO      1
+LGMK     1
+NBIX     1
+MRAM     1
+MSTR     1
+SPXC     1
+SYRS     1
+SWBI     1
+TDW      1
+VISN     1
+
+Top 5 most-represented companies: {'RGR': np.int64(18), 'FCN': np.int64(17), 'GEF': np.int64(12), 'PATK': np.int64(6), 'LCII': np.int64(5)}
+Observations from top 5 companies: 58 of 91 = 63.7%
+
+LIMITATION TO CITE: 63.7% of observations come from just 5 companies (RGR, FCN, GEF, PATK, LCII), meaning results may be disproportionately influenced by company-specific factors (e.g. RGR/SWBI firearms-sector dynamics, FCN's consulting-services cyclicality) rather than reflecting a broad cross-sectional relationship between evasion language and market reaction. Standard errors and significance tests throughout this analysis assume independent observations, which is a materially wrong assumption here.
