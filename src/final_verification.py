@@ -63,6 +63,8 @@ CONCENTRATION_OUT = RESULTS_DIR / "final_company_concentration.csv"
 MODEL_RESULTS_OUT = RESULTS_DIR / "final_model_results.csv"
 ROBUSTNESS_OUT = RESULTS_DIR / "final_robustness_checks.txt"
 QUALITATIVE_OUT = RESULTS_DIR / "qualitative_examples.csv"
+VALIDATION_OVERLAP_CSV = RESULTS_DIR / "validation_panel_overlap.csv"
+HUMAN_ANNOTATION_CSV = BASE_DIR / "validation" / "human_annotation.csv"
 
 CORR_COLS = [
     "mean_evasion_score", "evasion_variance", "max_evasion_score", "car_3day",
@@ -495,6 +497,49 @@ def section7_qualitative(scores):
     return combined
 
 
+# ── Section 9: human validation sample overlap with the final panel ────────
+
+def section9_validation_overlap(mp):
+    hr("SECTION 9: Human validation sample overlap with final panel")
+
+    ann = pd.read_csv(HUMAN_ANNOTATION_CSV, dtype=str)
+    shared = ann[ann[["human1_evasion_score", "human2_evasion_score"]].notna().all(axis=1)].copy()
+    n_validated = len(shared)
+    log(f"Validated pairs (human1_evasion_score AND human2_evasion_score both present): {n_validated}")
+
+    shared["transcript_id"] = shared["transcript_id"].str.zfill(18)
+    mp_ids = set(mp["transcript_id"])
+    in_panel = shared["transcript_id"].isin(mp_ids)
+    n_in_panel = int(in_panel.sum())
+    n_excluded = n_validated - n_in_panel
+    pct_in_panel = n_in_panel / n_validated * 100
+
+    log(f"Present in master_panel.csv transcript_id set: {n_in_panel} ({pct_in_panel:.1f}%)")
+    log(f"Not present (excluded via CAR-labeling attrition, not SIC/REIT filtering -- these are "
+        f"original-corpus transcripts predating the SIC filter): {n_excluded} ({100 - pct_in_panel:.1f}%)")
+
+    missing_tids = sorted(shared.loc[~in_panel, "transcript_id"].unique())
+    log(f"\nUnique excluded transcript_ids ({len(missing_tids)}):")
+    for tid in missing_tids:
+        tickers = shared.loc[shared["transcript_id"] == tid, "company_ticker"].unique()
+        log(f"  {tid}  ticker(s)={list(tickers)}")
+
+    table = pd.DataFrame([{
+        "metric": "validated_pairs_total", "value": n_validated,
+    }, {
+        "metric": "validated_pairs_in_final_panel", "value": n_in_panel,
+    }, {
+        "metric": "validated_pairs_in_final_panel_pct", "value": round(pct_in_panel, 1),
+    }, {
+        "metric": "validated_pairs_excluded", "value": n_excluded,
+    }, {
+        "metric": "validated_pairs_excluded_pct", "value": round(100 - pct_in_panel, 1),
+    }])
+    table.to_csv(VALIDATION_OVERLAP_CSV, index=False, encoding="utf-8")
+    log(f"\nSaved -> {VALIDATION_OVERLAP_CSV}")
+    return n_validated, n_in_panel, pct_in_panel
+
+
 # ── Section 8 ────────────────────────────────────────────────────────────────
 
 def section8_summary(n_htm, n_qa, n_scores, n_unique_tid, n_unique_ticker_scores, mp,
@@ -587,6 +632,8 @@ def main():
     log(f"\n5. Saved Section 6 (robustness checks) output -> {ROBUSTNESS_OUT}")
 
     section7_qualitative(scores)
+
+    section9_validation_overlap(mp)
 
     section8_summary(n_htm, n_qa, n_scores, n_unique_tid, n_unique_ticker, mp,
                       top5_pct, corr_central, model_results_df, cv_summary, power_df,

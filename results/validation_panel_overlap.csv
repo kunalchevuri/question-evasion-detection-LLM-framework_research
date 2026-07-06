@@ -1,0 +1,6 @@
+metric,value
+validated_pairs_total,75.0
+validated_pairs_in_final_panel,51.0
+validated_pairs_in_final_panel_pct,68.0
+validated_pairs_excluded,24.0
+validated_pairs_excluded_pct,32.0
