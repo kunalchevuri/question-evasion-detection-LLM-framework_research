@@ -441,8 +441,9 @@ def build_accounting_features(df, filing_lookup):
     ciks = {}
     for _, row in df.iterrows():
         meta = filing_lookup.get(row["transcript_id"])
-        if meta:
-            ciks[row["company_ticker"]] = meta["cik"]
+        ticker = row["company_ticker"]
+        if meta and isinstance(ticker, str) and ticker:
+            ciks[ticker] = meta["cik"]
 
     print(f"Fetching XBRL companyfacts for {len(ciks)} unique CIKs...")
     facts_cache = {}
