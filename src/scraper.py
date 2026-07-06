@@ -1,17 +1,27 @@
 """
 EDGAR earnings call transcript scraper.
-Fetches S&P 500 tech/healthcare companies, resolves CIKs, queries EFTS for
-8-K filings, and downloads raw transcript exhibits.
+Resolves CIKs, queries EFTS + submissions API for 8-K filings (2015-2023),
+and downloads raw transcript exhibits.
+
+Part B originally restricted to S&P 500 tech/healthcare companies; that
+restriction has been removed in favor of the 43 tickers already validated in
+data/parsed_qa/evasion_scores.csv plus whatever companies the EFTS phrase
+searches in Part A turn up. get_sp500_tech_healthcare()/build_cik_csv() are
+kept for reference but are no longer called from main().
 """
 
 import csv
 import io
 import logging
 import os
+import sys
 import time
 
 import pandas as pd
 import requests
+
+sys.path.insert(0, os.path.dirname(__file__))
+from backfill_tickers import MANUAL_TICKER_OVERRIDES  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO,
@@ -149,7 +159,7 @@ def build_cik_csv(companies: pd.DataFrame, ticker_to_cik: dict) -> pd.DataFrame:
 
 
 # ---------------------------------------------------------------------------
-# Step 3: Query EDGAR EFTS for 8-K earnings call filings 2019-2023
+# Step 3: Query EDGAR EFTS for 8-K earnings call filings 2015-2023
 #
 # Strategy: The EFTS full-text index only indexes a small subset of 8-K
 # exhibit content. We use it per-company (entity filter) first; if a company
@@ -192,7 +202,7 @@ def _submissions_8k(cik: str, entity_name: str) -> list:
         accessions = recent.get("accessionNumber", [])
         reports = recent.get("reportDate", [])
         for form, date, acc, rep in zip(forms, dates, accessions, reports):
-            if form == "8-K" and "2019" <= date[:4] <= "2023":
+            if form == "8-K" and "2015" <= date[:4] <= "2023":
                 results.append(
                     {
                         "accession_no": _fmt_accession(acc),
@@ -217,25 +227,84 @@ def _submissions_8k(cik: str, entity_name: str) -> list:
 
 
 
-def query_efts(cik_df: pd.DataFrame) -> list:
+def build_expansion_cik_df(ticker_to_cik: dict) -> pd.DataFrame:
+    """
+    Part B company universe for the dataset-expansion pass: limited to the 43
+    tickers already in data/parsed_qa/evasion_scores.csv -- companies we already
+    know produce clean, parseable transcripts -- to backfill additional history
+    (2015-2018, plus anything the wider EFTS queries newly surfaced for them).
+
+    Earlier attempts also fed every company *discovered* via Part A's phrase
+    searches into Part B's exhaustive "pull every 8-K this company has ever
+    filed" step. That does not scale: even restricted to the original 5
+    (narrower, transcript-specific) queries, this surfaced 1,654 additional
+    companies -- mostly legitimate operating companies, not noise -- but each
+    contributes on average ~89 mostly-irrelevant 8-Ks (executive changes,
+    routine agreements, etc.), producing 150,000+ candidate filings and an
+    estimated 40+ hour Step 4 (download+validate) runtime, with a very low
+    validation hit-rate since most of any company's 8-Ks aren't earnings
+    calls at all.
+
+    New companies still come through -- just via Part A's own direct,
+    phrase-verified hits (already phrase-verified copies of the actual
+    transcript exhibit, so Step 4 validation hit-rate is much higher, and the
+    candidate volume is bounded by what genuinely matched a transcript
+    phrase, not by every 8-K a company has ever filed).
+    """
+    known_path = os.path.join(DATA_DIR, "parsed_qa", "evasion_scores.csv")
+    known_df = pd.read_csv(known_path, dtype=str)
+    known_tickers = sorted(known_df["company_ticker"].dropna().unique())
+
+    rows = []
+    seen_ciks: set = set()
+
+    for ticker in known_tickers:
+        cik = ticker_to_cik.get(ticker.upper())
+        if cik and cik not in seen_ciks:
+            seen_ciks.add(cik)
+            rows.append({"cik": cik, "name": ticker, "ticker": ticker, "known": True})
+    n_known_resolved = len(rows)
+    if n_known_resolved < len(known_tickers):
+        log.warning(
+            "Only resolved CIK for %d/%d known tickers via company_tickers.json",
+            n_known_resolved, len(known_tickers),
+        )
+
+    df = pd.DataFrame(rows)
+    print(
+        f"  Part B company universe: {len(df)} companies "
+        f"(the 43 known/validated tickers only -- new companies come through "
+        f"Part A's direct phrase-verified hits instead of an exhaustive per-company pull)"
+    )
+    return df
+
+
+def query_efts(ticker_to_cik: dict, seen_acc: set) -> list:
     """
     Two-phase collection:
       A) Global EFTS phrase search – finds all 8-K exhibits that literally contain
-         'CORPORATE PARTICIPANTS' and 'QUESTIONS AND ANSWERS' (verified transcripts).
-      B) Submissions API per S&P 500 company – returns every 8-K 2019-2023; step 4
-         content-filters these for the required phrases.
+         one of the EFTS_QUERIES phrases (verified transcripts), 2015-2023. New
+         companies (beyond the 43 known tickers) come through here.
+      B) Submissions API for the 43 known tickers only – returns every 8-K
+         2015-2023 for companies already validated to produce clean transcripts;
+         step 4 content-filters these for the required phrases. See
+         build_expansion_cik_df for why this isn't extended to Part A-discovered
+         companies too.
     EFTS results are prepended so step 4 tries them first.
+
+    seen_acc is pre-seeded by the caller with accession numbers already present
+    in data/raw_transcripts/, so filings we've already downloaded are never
+    re-added to the hit list in the first place.
     """
     all_hits = []
-    seen_acc: set = set()
 
     # -- Part A: EFTS phrase searches – one per query, combined and deduplicated --
-    print("Part A: EFTS phrase searches (5 queries, verified transcript exhibits)...")
+    print(f"Part A: EFTS phrase searches ({len(EFTS_QUERIES)} queries, verified transcript exhibits)...")
     efts_url = "https://efts.sec.gov/LATEST/search-index"
     efts_params_base = {
         "forms": "8-K",
         "dateRange": "custom",
-        "startdt": "2019-01-01",
+        "startdt": "2015-01-01",
         "enddt": "2023-12-31",
     }
 
@@ -264,22 +333,26 @@ def query_efts(cik_df: pd.DataFrame) -> list:
                 adsh = src.get("adsh", "")
                 if not adsh or not cik_list:
                     continue
+                cik = str(cik_list[0]).zfill(10)
+
+                if adsh in seen_acc:
+                    continue
+
                 names = src.get("display_names", [])
                 entity_name = names[0].split(" (")[0].strip() if names else ""
                 rec = {
                     "accession_no": adsh,
                     "entity_name": entity_name,
-                    "cik": cik_list[0],
+                    "cik": cik,
                     "file_date": src.get("file_date", ""),
                     "period_of_report": src.get("period_ending", ""),
                     "form_type": (src.get("root_forms") or ["8-K"])[0],
                     "file_type_hint": src.get("file_type", ""),
                     "source": "EFTS",
                 }
-                if adsh not in seen_acc:
-                    seen_acc.add(adsh)
-                    all_hits.append(rec)
-                    query_count += 1
+                seen_acc.add(adsh)
+                all_hits.append(rec)
+                query_count += 1
 
             total_for_query = (
                 data.get("hits", {}).get("total", {}).get("value", 0)
@@ -292,10 +365,11 @@ def query_efts(cik_df: pd.DataFrame) -> list:
 
         print(f"    -> {query_count} new unique filings (running total: {len(all_hits)})")
 
-    print(f"  Part A done: {len(all_hits)} phrase-verified filing exhibits")
+    print(f"  Part A done: {len(all_hits)} new phrase-verified filing exhibits")
 
-    # -- Part B: submissions API for each S&P 500 tech/healthcare company --
-    print("Part B: Submissions API for S&P 500 tech/healthcare 8-Ks (2019-2023)...")
+    # -- Part B: submissions API for the 43 known tickers only (see build_expansion_cik_df) --
+    cik_df = build_expansion_cik_df(ticker_to_cik)
+    print("Part B: Submissions API for the 43 known tickers (8-Ks, 2015-2023)...")
     before_b = len(all_hits)
     for i, row in enumerate(cik_df.itertuples(), 1):
         cik = str(row.cik)
@@ -310,20 +384,57 @@ def query_efts(cik_df: pd.DataFrame) -> list:
                 all_hits.append(h)
                 added += 1
         print(
-            f"  [{i:3d}/{len(cik_df)}] {name[:40]:<40} | +{added:3d} 8-Ks | total: {len(all_hits)}"
+            f"  [{i:3d}/{len(cik_df)}] {name[:40]:<40} | +{added:3d} 8-Ks | total new: {len(all_hits)}"
         )
 
-    print(f"  Part B done: added {len(all_hits) - before_b} S&P 500 8-K filings")
+    print(f"  Part B done: added {len(all_hits) - before_b} 8-K filings")
     return all_hits
 
 
 def save_filing_index(hits: list) -> pd.DataFrame:
+    """
+    Merges new hits into the existing filing_index.csv rather than overwriting
+    it -- downstream scripts (parser.py, backfill_tickers.py, features.py) rely
+    on the metadata already recorded there for the original 216 transcripts.
+    """
     out_path = os.path.join(DATA_DIR, "filing_index.csv")
-    df = pd.DataFrame(hits)
-    df.drop_duplicates(subset=["accession_no"], inplace=True)
-    df.to_csv(out_path, index=False, encoding="utf-8")
-    print(f"  Saved {len(df)} unique filings -> {out_path}")
-    return df
+    new_df = pd.DataFrame(hits)
+
+    if os.path.exists(out_path):
+        existing_df = pd.read_csv(out_path, dtype=str)
+        n_existing = len(existing_df)
+        combined = pd.concat([existing_df, new_df], ignore_index=True)
+    else:
+        n_existing = 0
+        combined = new_df
+
+    combined.drop_duplicates(subset=["accession_no"], inplace=True)
+    combined.to_csv(out_path, index=False, encoding="utf-8")
+    print(
+        f"  filing_index.csv: {n_existing} existing rows + {len(new_df)} new candidate "
+        f"rows -> {len(combined)} unique rows saved -> {out_path}"
+    )
+    return combined
+
+
+def get_existing_accessions() -> set:
+    """
+    Accession numbers (dashed form, e.g. '0001234567-19-000123') for filings we
+    already have a saved raw transcript for. Used to pre-seed seen_acc so Part
+    A/B never re-add them to the hit list, and download_transcripts never
+    re-fetches them -- satisfies "do not re-download the existing 216 files."
+    """
+    existing = set()
+    for fname in os.listdir(RAW_DIR):
+        parts = fname.split("_")
+        if len(parts) < 3:
+            continue
+        cik10, yr, seq = parts[0], parts[1], parts[2]
+        if (len(cik10) == 10 and cik10.isdigit()
+                and len(yr) == 2 and yr.isdigit()
+                and len(seq) == 6 and seq.isdigit()):
+            existing.add(f"{cik10}-{yr}-{seq}")
+    return existing
 
 
 # ---------------------------------------------------------------------------
@@ -337,6 +448,12 @@ EFTS_QUERIES = [
     '"QUESTIONS & ANSWERS"',
     '"Q&A SESSION"',
     '"CONFERENCE CALL PARTICIPANTS"',
+    # Added for the dataset expansion pass (2015-2023 window): these catch
+    # transcript format variations the original 5 queries miss.
+    '"PRESENTATION" "QUESTIONS AND ANSWERS"',
+    '"OPERATOR" "QUESTION-AND-ANSWER"',
+    '"EARNINGS CALL TRANSCRIPT"',
+    '"CONFERENCE CALL TRANSCRIPT"',
 ]
 
 # A valid transcript must contain at least one phrase from each group.
@@ -430,14 +547,27 @@ def download_transcript(url: str, dest_path: str) -> bool:
     return True
 
 
-def download_transcripts(filing_df: pd.DataFrame) -> None:
+def download_transcripts(filing_df: pd.DataFrame, known_ciks: set) -> dict:
+    """
+    filing_df is expected to already exclude accessions matching the 216
+    existing raw transcripts (seen_acc was pre-seeded before Part A/B ran), so
+    every successful save here is a genuinely new transcript. The 'Already
+    exists' branch is kept only as a safety net for the rare case where two
+    filing_df rows resolve to the same destination filename.
+
+    known_ciks: CIKs of the 43 already-validated tickers, used to classify
+    each new download as an additional quarter from an existing company vs.
+    a transcript from a brand-new company.
+    """
     downloaded = 0
     failed = 0
     skipped = 0
     error_log = []
+    new_company_ciks: set = set()
+    existing_company_new_quarters = 0
     total_filings = len(filing_df)
 
-    print(f"\nDownloading all valid transcript exhibits ({total_filings} filings to check)...")
+    print(f"\nDownloading new transcript exhibits ({total_filings} candidate filings to check)...")
 
     for _, row in filing_df.iterrows():
         accession_no = row["accession_no"]
@@ -458,17 +588,20 @@ def download_transcripts(filing_df: pd.DataFrame) -> None:
             dest = os.path.join(RAW_DIR, fname)
 
             if os.path.exists(dest):
-                print(f"  Already exists: {fname}")
-                downloaded += 1
+                print(f"  Already exists (unexpected at this stage): {fname}")
                 found_for_filing = True
                 break
 
-            print(f"  [saved={downloaded}] {entity_name} | {doc_url}")
+            print(f"  [new saved={downloaded}] {entity_name} | {doc_url}")
             success = download_transcript(doc_url, dest)
             if success:
                 downloaded += 1
                 found_for_filing = True
                 print(f"    Saved -> {fname}")
+                if cik in known_ciks:
+                    existing_company_new_quarters += 1
+                else:
+                    new_company_ciks.add(cik)
                 break
             else:
                 failed += 1
@@ -477,7 +610,7 @@ def download_transcripts(filing_df: pd.DataFrame) -> None:
         if not found_for_filing:
             skipped += 1
 
-    print(f"\nDownload complete: {downloaded} saved, {failed} failed, {skipped} skipped")
+    print(f"\nDownload complete: {downloaded} new saved, {failed} failed validation, {skipped} skipped (no usable exhibit)")
 
     if error_log:
         err_path = os.path.join(DATA_DIR, "download_errors.csv")
@@ -487,6 +620,14 @@ def download_transcripts(filing_df: pd.DataFrame) -> None:
             writer.writerows(error_log)
         print(f"  Error log -> {err_path}")
 
+    return {
+        "downloaded": downloaded,
+        "failed": failed,
+        "skipped": skipped,
+        "new_company_ciks": new_company_ciks,
+        "existing_company_new_quarters": existing_company_new_quarters,
+    }
+
 
 # ---------------------------------------------------------------------------
 # Main
@@ -494,24 +635,61 @@ def download_transcripts(filing_df: pd.DataFrame) -> None:
 
 def main():
     print("=" * 60)
-    print("EDGAR Earnings Call Transcript Scraper")
+    print("EDGAR Earnings Call Transcript Scraper -- dataset expansion pass")
+    print("2015-2023, 9 EFTS phrase queries, 43 known tickers + EFTS-discovered")
+    print("companies (S&P 500 tech/healthcare restriction removed from Part B)")
     print("=" * 60)
 
-    # Step 1
-    companies = get_sp500_tech_healthcare()
+    existing_accessions = get_existing_accessions()
+    n_existing_files = len(os.listdir(RAW_DIR))
+    print(f"\nExisting raw transcripts on disk: {n_existing_files}")
+    print(f"Existing accession numbers recognized for dedup: {len(existing_accessions)}")
 
-    # Step 2
     ticker_to_cik = get_cik_map()
-    cik_df = build_cik_csv(companies, ticker_to_cik)
 
-    # Step 3
-    hits = query_efts(cik_df)
-    filing_df = save_filing_index(hits)
+    # SEC's company_tickers.json only covers currently-listed tickers; several
+    # of the 43 known tickers are delisted/acquired/renamed (same issue
+    # backfill_tickers.py hit) and need the verified manual CIK overrides,
+    # merged in without clobbering the authoritative SEC mapping.
+    ticker_to_cik_override = {v: k for k, v in MANUAL_TICKER_OVERRIDES.items()}
+    n_override_added = 0
+    for ticker, cik in ticker_to_cik_override.items():
+        if ticker.upper() not in ticker_to_cik:
+            ticker_to_cik[ticker.upper()] = cik
+            n_override_added += 1
+    print(f"Merged {n_override_added} manual CIK override(s) for delisted/renamed known tickers")
 
-    # Step 4
-    download_transcripts(filing_df)
+    known_path = os.path.join(DATA_DIR, "parsed_qa", "evasion_scores.csv")
+    known_df = pd.read_csv(known_path, dtype=str)
+    known_tickers = sorted(known_df["company_ticker"].dropna().unique())
+    known_ciks = {ticker_to_cik[t.upper()] for t in known_tickers if t.upper() in ticker_to_cik}
+    print(f"Resolved CIK for {len(known_ciks)}/{len(known_tickers)} known tickers")
 
-    print("\nAll done.")
+    # Pre-seed seen_acc with everything already on disk so Part A/B never
+    # re-add already-downloaded filings to the hit list in the first place.
+    seen_acc = set(existing_accessions)
+
+    hits = query_efts(ticker_to_cik, seen_acc)
+    save_filing_index(hits)  # merges into the existing 8715-row filing_index.csv
+
+    new_filing_df = pd.DataFrame(hits)
+    stats = download_transcripts(new_filing_df, known_ciks)
+
+    n_new_files_on_disk = len(os.listdir(RAW_DIR)) - n_existing_files
+
+    print("\n" + "=" * 60)
+    print("EXPANSION SUMMARY")
+    print("=" * 60)
+    print(f"Transcripts before this run:                {n_existing_files}")
+    print(f"New transcripts downloaded this run:        {stats['downloaded']}")
+    print(f"  (raw_transcripts/ file count confirms:    {n_new_files_on_disk} new files)")
+    print(f"Transcripts after this run:                 {n_existing_files + stats['downloaded']}")
+    print(f"New unique companies added:                 {len(stats['new_company_ciks'])}")
+    print(f"Additional quarters from the 43 known companies: {stats['existing_company_new_quarters']}")
+    print(f"Failed validation (word count / phrase check): {stats['failed']}")
+    print(f"Skipped (no usable exhibit found):          {stats['skipped']}")
+
+    print("\nAll done. No parsing or scoring was run -- raw files only.")
 
 
 if __name__ == "__main__":
