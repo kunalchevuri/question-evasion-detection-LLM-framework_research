@@ -1,0 +1,100 @@
+
+======================================================================
+SECTION 6.1: 5-fold stratified cross-validation, Config B vs Config C
+======================================================================
+
+--- Fold 1 (train n=124, test n=31) ---
+  Config B: LR AUROC=0.4833   XGB AUROC=0.5792
+  Config C: LR AUROC=0.4250   XGB AUROC=0.5333
+
+--- Fold 2 (train n=124, test n=31) ---
+  Config B: LR AUROC=0.3125   XGB AUROC=0.4125
+  Config C: LR AUROC=0.3583   XGB AUROC=0.4333
+
+--- Fold 3 (train n=124, test n=31) ---
+  Config B: LR AUROC=0.7083   XGB AUROC=0.5583
+  Config C: LR AUROC=0.6208   XGB AUROC=0.5583
+
+--- Fold 4 (train n=124, test n=31) ---
+  Config B: LR AUROC=0.6417   XGB AUROC=0.4708
+  Config C: LR AUROC=0.6792   XGB AUROC=0.4875
+
+--- Fold 5 (train n=124, test n=31) ---
+  Config B: LR AUROC=0.3958   XGB AUROC=0.6167
+  Config C: LR AUROC=0.4583   XGB AUROC=0.6333
+
+--- Mean +/- SD across 5 folds ---
+Config B / LogisticRegression: mean=0.5083  sd=0.1654  folds=[0.4833, 0.3125, 0.7083, 0.6417, 0.3958]
+Config B / XGBoost: mean=0.5275  sd=0.0837  folds=[0.5792, 0.4125, 0.5583, 0.4708, 0.6167]
+Config C / LogisticRegression: mean=0.5083  sd=0.1358  folds=[0.4250, 0.3583, 0.6208, 0.6792, 0.4583]
+Config C / XGBoost: mean=0.5292  sd=0.0752  folds=[0.5333, 0.4333, 0.5583, 0.4875, 0.6333]
+
+--- Config C minus Config B, per fold, paired t-test ---
+LogisticRegression: per-fold (C-B) = [-0.0583, +0.0458, -0.0875, +0.0375, +0.0625]
+LogisticRegression: mean diff = +0.0000   t=0.0000  p=1.0000
+XGBoost: per-fold (C-B) = [-0.0458, +0.0208, +0.0000, +0.0167, +0.0167]
+XGBoost: mean diff = +0.0017   t=0.1344  p=0.8996
+
+--- Interpretation (all numbers computed fresh in this run, nothing hardcoded) ---
+This run's single chronological-split result (Section 5): LR AUROC B=0.6078 -> C=0.6418; XGBoost B=0.4140 -> C=0.4197. 5-fold CV: LR mean B=0.5083 (sd=0.1654) -> C=0.5083 (sd=0.1358); XGBoost mean B=0.5275 (sd=0.0837) -> C=0.5292 (sd=0.0752). Fold-to-fold SD is large relative to the single-split difference-of-interest, indicating the single-split result is fragile, not a stable estimate.
+
+======================================================================
+SECTION 6.2: Pearson AND Spearman correlation (robustness_checks.py methodology)
+======================================================================
+
+======================================================================
+TASK 2: Raw correlation, evasion features vs car_3day (final verification, full panel, n=155)
+======================================================================
+           feature   n  pearson_r  pearson_p  spearman_r  spearman_p
+mean_evasion_score 155  -0.029693   0.713793   -0.008162    0.919718
+  evasion_variance 155   0.047230   0.559509    0.018762    0.816758
+ max_evasion_score 155   0.008140   0.919933    0.013151    0.870987
+
+======================================================================
+SECTION 6.3: COVID exclusion sensitivity (filing_year != 2020)
+======================================================================
+Rows in 2020: 25
+Rows remaining after excluding 2020: 130 (of 155 total, 155 - 25 = 130)
+
+--- Config B vs C AUROC, COVID-excluded subset ---
+Config B: LR AUROC=0.5987   XGB AUROC=0.4026
+Config C: LR AUROC=0.6092   XGB AUROC=0.4158
+
+--- Side-by-side: full sample (n=155) vs excluding 2020 (n=130) ---
+Config B LR AUROC:  full=0.6078  excl-2020=0.5987
+Config B XGB AUROC: full=0.4140  excl-2020=0.4026
+Config C LR AUROC:  full=0.6418  excl-2020=0.6092
+Config C XGB AUROC: full=0.4197  excl-2020=0.4158
+
+--- Correlation, evasion features vs car_3day, COVID-excluded subset ---
+
+======================================================================
+TASK 2: Raw correlation, evasion features vs car_3day (COVID-excluded (final verification), n=130)
+======================================================================
+           feature   n  pearson_r  pearson_p  spearman_r  spearman_p
+mean_evasion_score 130   0.001993   0.982047    0.009052    0.918586
+  evasion_variance 130   0.114226   0.195654    0.068217    0.440599
+ max_evasion_score 130   0.074084   0.402212    0.066185    0.454365
+
+--- Correlation significance survival (alpha=0.05) ---
+  mean_evasion_score     full: r=-0.0297 p=0.7138  |  COVID-excl: r=+0.0020 p=0.9820  -> N/A -- not significant in the full sample to begin with
+  evasion_variance       full: r=+0.0472 p=0.5595  |  COVID-excl: r=+0.1142 p=0.1957  -> N/A -- not significant in the full sample to begin with
+  max_evasion_score      full: r=+0.0081 p=0.9199  |  COVID-excl: r=+0.0741 p=0.4022  -> N/A -- not significant in the full sample to begin with
+
+======================================================================
+SECTION 6.4: Power analysis -- minimum detectable AUROC difference at 80% power
+======================================================================
+
+--- OLD n=91 ---
+  True AUROC difference = 0.02  ->  power = 0.067
+  True AUROC difference = 0.05  ->  power = 0.100
+  True AUROC difference = 0.10  ->  power = 0.226
+  True AUROC difference = 0.15  ->  power = 0.444
+  >>> None of [0.02, 0.05, 0.1, 0.15] reached 80% power -- true minimum detectable effect is larger than 0.15
+
+--- CURRENT n=155 ---
+  True AUROC difference = 0.02  ->  power = 0.070
+  True AUROC difference = 0.05  ->  power = 0.129
+  True AUROC difference = 0.10  ->  power = 0.344
+  True AUROC difference = 0.15  ->  power = 0.664
+  >>> None of [0.02, 0.05, 0.1, 0.15] reached 80% power -- true minimum detectable effect is larger than 0.15
