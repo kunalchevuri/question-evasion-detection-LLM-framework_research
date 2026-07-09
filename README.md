@@ -43,3 +43,27 @@ results/        all figures, tables, and text output from modeling/robustness/ve
 - Accounting fundamentals: SEC XBRL structured data (`data.sec.gov/api/xbrl`)
 - Sentiment dictionary: Loughran-McDonald financial sentiment word lists
 - LLM judges: Claude (Anthropic), Llama 3.3 70B (Groq)
+
+## Reproduction Steps
+
+1. Clone the repo and install dependencies:
+   ```
+   git clone <repo-url>
+   cd question-evasion-detection-LLM-framework_research
+   pip install -r requirements.txt
+   ```
+2. If re-running any LLM scoring step (`judge.py`, `multi_llm_judge.py`), set the relevant API key(s) as environment variables:
+   ```
+   export ANTHROPIC_API_KEY=...
+   export GROQ_API_KEY=...   # only needed for the cross-model validation step
+   ```
+   All data already produced by these steps (parsed Q&A pairs, evasion scores, human/cross-LLM annotations) is committed to the repo, so this step is optional unless you want to regenerate it from scratch.
+3. Reproduce every headline number in the paper from the files currently on disk:
+   ```
+   python src/final_verification.py
+   ```
+   This is the canonical entry point — it re-derives provenance counts, descriptive statistics, the correlation matrix, classification results (including the Table 2 bootstrap CI), robustness checks (5-fold CV, COVID-year exclusion, power analysis), and the human-validation overlap directly from `data/` and `results/`, with no reliance on cached or previously printed output.
+
+## License
+
+MIT — see `LICENSE`.

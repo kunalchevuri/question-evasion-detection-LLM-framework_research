@@ -1,0 +1,13 @@
+# Logs not needed for reproducibility
+scraper_errors.log
+
+# Python
+__pycache__/
+*.pyc
+
+# Environment / secrets
+.env
+
+# Note: no files currently exceed 10MB (checked at time of writing), so no
+# size-based patterns are listed here. data/download_errors.csv is kept
+# tracked -- it documents data collection provenance and is well under 10MB.
