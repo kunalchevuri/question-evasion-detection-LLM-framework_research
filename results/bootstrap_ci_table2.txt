@@ -1,0 +1,28 @@
+Loaded master_panel.csv: 155 rows, 32 companies
+Chronological 70/30 split: train n=109, test n=46
+
+======================================================================
+TABLE 2: Bootstrap 95% CI, Config C - Config B AUROC difference
+======================================================================
+
+--- LogisticRegression ---
+AUROC B: 0.6078
+AUROC C: 0.6418
+Point estimate (C - B): +0.0340
+Bootstrap: 1000 resamples (0 skipped for landing on a single class)
+95% CI: [-0.0173, +0.0857]
+  --> CI includes 0: not significant
+
+--- XGBoost ---
+AUROC B: 0.4140
+AUROC C: 0.4197
+Point estimate (C - B): +0.0057
+Bootstrap: 1000 resamples (0 skipped for landing on a single class)
+95% CI: [-0.0720, +0.0833]
+  --> CI includes 0: not significant
+
+======================================================================
+SUMMARY (for Table 2)
+======================================================================
+LogisticRegression   point estimate = +0.0340   95% CI = [-0.0173, +0.0857]
+XGBoost              point estimate = +0.0057   95% CI = [-0.0720, +0.0833]
