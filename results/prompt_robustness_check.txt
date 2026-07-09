@@ -1,0 +1,46 @@
+Loaded 75 validated pairs from C:\Users\ckche\OneDrive\Documents\question-evasion-detection-LLM-framework_research\validation\human_annotation.csv
+Model: claude-sonnet-4-6, temperature=0
+
+
+======================================================================
+variant_a_reworded
+======================================================================
+
+Scoring variant_a_reworded (75 pairs)...
+  [20/75] scored: 20, failed: 0
+  [40/75] scored: 40, failed: 0
+  [60/75] scored: 60, failed: 0
+Done: 75/75 scored, 0 failed
+
+--- variant_a_reworded vs ORIGINAL prompt (n=75) ---
+Pearson r = +0.9283  (p=4.3740e-33)
+Quadratic-weighted kappa = 0.8466  (almost perfect agreement)
+
+======================================================================
+variant_b_reordered
+======================================================================
+
+Scoring variant_b_reordered (75 pairs)...
+  [20/75] scored: 20, failed: 0
+  [40/75] scored: 40, failed: 0
+  [60/75] scored: 60, failed: 0
+Done: 75/75 scored, 0 failed
+
+--- variant_b_reordered vs ORIGINAL prompt (n=75) ---
+Pearson r = +0.8900  (p=1.3005e-26)
+Quadratic-weighted kappa = 0.6820  (substantial agreement)
+
+======================================================================
+SUMMARY TABLE
+======================================================================
+            variant  n  pearson_r    pearson_p  quadratic_kappa
+ variant_a_reworded 75   0.928275 4.374024e-33         0.846626
+variant_b_reordered 75   0.890040 1.300508e-26         0.681966
+
+======================================================================
+INTERPRETATION
+======================================================================
+Mean correlation with original across both variants: r=+0.9092
+Mean quadratic-weighted kappa with original across both variants: 0.7643
+
+The scores are STABLE across reasonable prompt rewording -- both variants correlate strongly with the original (r > 0.7), supporting the claim that evasion_score reflects a real, prompt-independent signal rather than one specific phrasing.
