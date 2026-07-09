@@ -1,0 +1,40 @@
+POST-COMMIT VERIFICATION -- recomputed fresh from the now-committed evasion_scores.csv (commit bbdf274). master_panel.csv, model results, and robustness checks are NOT rerun or modified -- confirmed read-only consistent below.
+
+======================================================================
+SECTION 1 SUMMARY (confirm 3350 / 285 / 49)
+======================================================================
+Total scored pairs (evasion_scores.csv): 3350
+Total unique transcripts:                 285
+Total unique companies:                   49
+Matches expected (3350/285/49): True
+
+======================================================================
+SECTION: Pair-level evasion_score distribution (all scored pairs)
+======================================================================
+Total scored pairs: 3350
+Exactly 0.0:    45 of 3350  (1.34%)
+Exactly 100.0:  3 of 3350  (0.09%)
+Strictly 0-100: 3302 of 3350  (98.57%)
+
+======================================================================
+SECTION: master_panel.csv consistency check (READ-ONLY, no rebuild)
+======================================================================
+master_panel.csv on disk: 155 rows, 32 companies (NOT modified by this script)
+Transcripts in master_panel.csv not found in evasion_scores.csv: 0
+Transcripts where mean_evasion_score differs from a fresh recomputation: 0
+CONFIRMED: master_panel.csv's mean_evasion_score column for all 155 rows exactly matches a fresh groupby(transcript_id).mean() over the current evasion_scores.csv. No changes needed.
+
+======================================================================
+SECTION: Pair-level mean and SD of evasion_score (ALL 3,350 pairs) -- Table 1 fix
+======================================================================
+n = 3350 individual Q&A pairs (NOT the 155 transcript-level observations)
+Pair-level mean evasion_score: 27.5037
+Pair-level SD evasion_score:   15.5761
+Pair-level median:             25.0000
+Pair-level min / max:          0.00 / 100.00
+
+For contrast -- transcript-level statistic (155 obs, mean-of-transcript-means):
+  Transcript-level mean: 28.8844
+  Transcript-level SD:   8.0817
+
+These are two different statistics measuring different things: the pair-level figure (n=3,350) is the distribution of individual Q&A-pair evasion scores; the transcript-level figure (n=155) is the distribution of PER-TRANSCRIPT MEANS, which has a smaller SD because averaging within each transcript cancels out pair-to-pair noise. Table 1 should label whichever one it reports with its correct n and unit of observation -- this is very likely the mislabeling flagged in review: transcript-level SD is a within-transcript-averaged quantity, not comparable to a pair-level SD, and reporting one with the other's label understates or overstates dispersion depending on which was swapped in.
