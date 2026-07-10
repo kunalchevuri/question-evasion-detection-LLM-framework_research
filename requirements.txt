@@ -1,14 +1,19 @@
-pandas>=2.0
-numpy>=1.24
-scipy>=1.10
-scikit-learn>=1.3
-xgboost>=2.0
-shap>=0.44
-statsmodels>=0.14
-matplotlib>=3.7
-requests>=2.31
-beautifulsoup4>=4.12
-yfinance>=0.2
-anthropic>=0.40
-groq>=0.11
-openai>=1.40
+# Pinned to specific tested versions for full reproducibility.
+# These are the versions this pipeline has been verified to run against;
+# if you cloned this repo before this pin was added and used the >= ranges,
+# results should still match, but pinned versions are the reproducibility
+# baseline going forward.
+pandas==2.2.3
+numpy==1.26.4
+scipy==1.13.1
+scikit-learn==1.5.2
+xgboost==2.1.1
+shap==0.46.0
+statsmodels==0.14.2
+matplotlib==3.9.2
+requests==2.32.3
+beautifulsoup4==4.12.3
+yfinance==0.2.44
+anthropic==0.40.0
+groq==0.11.0
+openai==1.51.0

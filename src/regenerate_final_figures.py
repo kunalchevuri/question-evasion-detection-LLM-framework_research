@@ -49,9 +49,9 @@ DPI = 300
 
 def figure1_evasion_vs_car(mp):
     fig, ax = plt.subplots(figsize=(6.5, 5))
-    for direction, color, label in [(1, COLOR_POS, "Positive CAR"), (0, COLOR_NEG, "Negative CAR")]:
+    for direction, color, marker, label in [(1, COLOR_POS, "o", "Positive CAR"), (0, COLOR_NEG, "^", "Negative CAR")]:
         sub = mp[mp["car_direction"] == direction]
-        ax.scatter(sub["mean_evasion_score"], sub["car_3day"], color=color, label=label,
+        ax.scatter(sub["mean_evasion_score"], sub["car_3day"], color=color, label=label, marker=marker,
                    s=28, alpha=0.85, edgecolors="white", linewidths=0.5)
 
     x = mp["mean_evasion_score"].to_numpy()

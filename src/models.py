@@ -52,8 +52,8 @@ CONFIGS = {
 # Validated categorical palette (dataviz skill reference palette).
 COLOR_LR = "#2a78d6"    # blue, categorical slot 1
 COLOR_XGB = "#1baf7a"   # aqua, categorical slot 2
-COLOR_POS = "#1baf7a"   # aqua  -- positive car_direction
-COLOR_NEG = "#e34948"   # red   -- negative car_direction
+COLOR_POS = "#0072B2"   # colorblind-safe blue (Okabe-Ito) -- positive car_direction
+COLOR_NEG = "#E69F00"   # colorblind-safe orange (Okabe-Ito) -- negative car_direction
 COLOR_SHAP = "#2a78d6"
 COLOR_TREND = "#0b0b0b"
 
