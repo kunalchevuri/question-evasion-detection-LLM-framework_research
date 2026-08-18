@@ -1,0 +1,43 @@
+Cost and throughput accounting -- LLM-as-judge scoring run
+======================================================================
+Model: claude-sonnet-4-6 (temperature 0, max_tokens 300)
+Pairs scored: 3,350
+List price: $3.00/MTok input, $15.00/MTok output
+
+----------------------------------------------------------------------
+MEASURED (exact, from committed data)
+----------------------------------------------------------------------
+  system prompt          :      1,408 chars       200 words
+  user template (scaffold):         41 chars         4 words
+  Q&A text, all pairs    :  5,643,239 chars  1,010,497 words
+  TOTAL INPUT text       : 10,497,389 chars  1,693,897 words
+  TOTAL OUTPUT text      :  1,253,013 chars   153,431 words
+  mean input  per pair   :      3,134 chars
+  mean output per pair   :        374 chars
+
+----------------------------------------------------------------------
+ESTIMATED (NOT authoritative -- verify before citing)
+----------------------------------------------------------------------
+Token counts below apply ~4 chars/token and ~1.33 tokens/word to the
+measured text. The two approximations disagree, so a range is given.
+Anthropic's tokenizer is the only correct source.
+
+  input tokens   :    2,252,883  to    2,624,347
+  output tokens  :      204,063  to      313,253
+  TOTAL COST     : $       9.82  to $      12.57
+  cost per pair  : $     0.0029  to $     0.0038
+
+----------------------------------------------------------------------
+NOT RECOVERABLE
+----------------------------------------------------------------------
+  Wall-clock throughput (pairs/hour). judge.py recorded no timing,
+  so this cannot be reconstructed from the artifact. To report it,
+  time a re-scoring run of a fixed subset and extrapolate.
+
+----------------------------------------------------------------------
+TO GET AUTHORITATIVE NUMBERS
+----------------------------------------------------------------------
+  Cost  : read actual spend from the Anthropic Console billing page
+          for the scoring window -- this is what the paper should cite.
+  Tokens: client.messages.count_tokens(model='claude-sonnet-4-6', ...)
+          over the same prompts, with an API key set.
