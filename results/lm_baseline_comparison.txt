@@ -1,0 +1,69 @@
+Loughran-McDonald dictionary baseline vs. LLM judge
+========================================================================
+Validation sample: 75 pairs (both annotators present)
+
+Fitted baselines use leave-one-out cross-validation, so their
+correlations are out-of-sample. The LLM judge never saw the human
+labels, so this comparison favours the baseline.
+
+Kappa is reported only for predictors natively on the human 0-10
+scale; raw proportions have no non-arbitrary mapping onto it.
+
+------------------------------------------------------------------------
+TARGET: human1
+------------------------------------------------------------------------
+predictor                                        r        p     rho     qwk
+LLM judge (claude-sonnet-4-6)                0.777    0.000   0.728   0.448
+LM uncertainty proportion (raw)              0.183    0.116   0.132     n/a
+LM weak_modal proportion (raw)               0.184    0.114   0.200     n/a
+LM negative proportion (raw)                 0.146    0.210   0.165     n/a
+LM litigious proportion (raw)               -0.041    0.730  -0.079     n/a
+response length (word count)                 0.030    0.797   0.060     n/a
+LM hedging model, fitted (LOO-CV)            0.032    0.788  -0.119   0.011
+LM all-6-category model, fitted (LOO-CV)    -0.169    0.148  -0.196   0.000
+LM all-6 + length, fitted (LOO-CV)          -0.202    0.083  -0.221   0.000
+
+------------------------------------------------------------------------
+TARGET: human2
+------------------------------------------------------------------------
+predictor                                        r        p     rho     qwk
+LLM judge (claude-sonnet-4-6)                0.803    0.000   0.783   0.609
+LM uncertainty proportion (raw)              0.257    0.026   0.113     n/a
+LM weak_modal proportion (raw)               0.226    0.051   0.120     n/a
+LM negative proportion (raw)                 0.113    0.334   0.134     n/a
+LM litigious proportion (raw)                0.140    0.231   0.104     n/a
+response length (word count)                -0.040    0.734   0.019     n/a
+LM hedging model, fitted (LOO-CV)            0.062    0.599  -0.122   0.083
+LM all-6-category model, fitted (LOO-CV)     0.060    0.609   0.001   0.043
+LM all-6 + length, fitted (LOO-CV)           0.042    0.720  -0.000  -0.025
+
+------------------------------------------------------------------------
+TARGET: human_mean
+------------------------------------------------------------------------
+predictor                                        r        p     rho     qwk
+LLM judge (claude-sonnet-4-6)                0.886    0.000   0.857   0.595
+LM uncertainty proportion (raw)              0.252    0.029   0.121     n/a
+LM weak_modal proportion (raw)               0.233    0.044   0.172     n/a
+LM negative proportion (raw)                 0.142    0.223   0.150     n/a
+LM litigious proportion (raw)                0.071    0.547   0.020     n/a
+response length (word count)                -0.011    0.924   0.034     n/a
+LM hedging model, fitted (LOO-CV)            0.080    0.496  -0.114   0.031
+LM all-6-category model, fitted (LOO-CV)    -0.032    0.785  -0.105   0.033
+LM all-6 + length, fitted (LOO-CV)          -0.054    0.646  -0.140   0.033
+
+========================================================================
+HEADLINE
+========================================================================
+human1: judge r=0.777 vs best baseline r=0.184 (p=0.114, LM weak_modal proportion (raw))
+    judge advantage: +0.593
+human2: judge r=0.803 vs best baseline r=0.257 (p=0.026, LM uncertainty proportion (raw))
+    judge advantage: +0.546
+human_mean: judge r=0.886 vs best baseline r=0.252 (p=0.029, LM uncertainty proportion (raw))
+    judge advantage: +0.634
+
+Note: the fitted LOO-CV models perform no better than, and often
+worse than, a single raw LM proportion. With n=75 and 6-7 features
+there is not enough signal in the lexical features to fit against,
+so cross-validation correctly exposes the fit as noise. This is
+evidence the dictionary approach lacks signal here, not evidence of
+an under-tuned baseline.
