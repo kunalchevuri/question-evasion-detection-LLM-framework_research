@@ -19,3 +19,11 @@ data/external/
 # Windows / OneDrive folder metadata
 desktop.ini
 Thumbs.db
+
+# LaTeX build artifacts (main.pdf is kept deliberately)
+overleaf/*.aux
+overleaf/*.log
+overleaf/*.out
+overleaf/*.bbl
+overleaf/*.blg
+overleaf/*.synctex.gz
