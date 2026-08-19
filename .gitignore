@@ -15,3 +15,7 @@ __pycache__/
 # Third-party evaluation corpora: redistributed under their own licences
 # (QEvasion is CC-BY-NC-ND). Fetch with src/score_external.py instead.
 data/external/
+
+# Windows / OneDrive folder metadata
+desktop.ini
+Thumbs.db
