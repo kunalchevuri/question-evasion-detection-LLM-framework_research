@@ -1,0 +1,36 @@
+External benchmark: qevasion
+====================================================================
+n scored                 : 308
+label source             : HUMAN annotation
+class counts             : {'Clear Reply': 79, 'Ambivalent': 206, 'Clear Non-Reply': 23}
+judge score mean (SD)    : 45.64 (18.28)
+
+mean judge score by external label (monotone = the measure orders correctly)
+  Clear Reply        n=79    mean=  34.57  SD= 15.69
+  Ambivalent         n=206   mean=  48.42  SD= 17.36
+  Clear Non-Reply    n=23    mean=  58.70  SD= 17.14
+
+--------------------------------------------------------------------
+THRESHOLD-FREE  (no cut points -- the safest numbers)
+--------------------------------------------------------------------
+  Spearman rho vs ordinal label : +0.398  (p = 3.7e-13)
+  AUROC, 'Clear Non-Reply' vs rest  : 0.741  [95% CI 0.639, 0.835]   (23 positives)
+  AUROC, any-evasion vs direct   : 0.738  [95% CI 0.680, 0.793]
+
+--------------------------------------------------------------------
+ZERO-SHOT ORDINAL  (cut points pre-registered from our own corpus)
+--------------------------------------------------------------------
+  cut points (our corpus tertiles): 18.75, 31.25
+  chosen without reference to any external label -- nothing fitted
+  Macro-F1                        : 0.163
+  quadratic-weighted kappa        : 0.078
+  accuracy                        : 0.149
+
+--------------------------------------------------------------------
+THRESHOLD-FIT  (30% fit / 70% held out -- fitted, and labelled as such)
+--------------------------------------------------------------------
+  fit on n=92, tested on n=216
+  fitted cut points               : 37.50, 75.00
+  Macro-F1  (held out)            : 0.472
+  quadratic-weighted kappa (held out): 0.320
+  accuracy  (held out)            : 0.611

@@ -1,0 +1,38 @@
+External benchmark: evasionbench
+====================================================================
+n scored                 : 999
+label source             : MODEL-GENERATED (Eva-4B-V2)
+  NOTE: agreement below is cross-system agreement with a fine-tuned
+        specialist model. It is NOT external human validation.
+class counts             : {'direct': 528, 'intermediate': 448, 'fully_evasive': 23}
+judge score mean (SD)    : 26.64 (14.92)
+
+mean judge score by external label (monotone = the measure orders correctly)
+  direct             n=528   mean=  18.21  SD= 11.24
+  intermediate       n=448   mean=  35.41  SD= 12.13
+  fully_evasive      n=23    mean=  49.46  SD= 16.20
+
+--------------------------------------------------------------------
+THRESHOLD-FREE  (no cut points -- the safest numbers)
+--------------------------------------------------------------------
+  Spearman rho vs ordinal label : +0.615  (p = 4.32e-105)
+  AUROC, 'fully_evasive' vs rest  : 0.856  [95% CI 0.771, 0.926]   (23 positives)
+  AUROC, any-evasion vs direct   : 0.849  [95% CI 0.825, 0.871]
+
+--------------------------------------------------------------------
+ZERO-SHOT ORDINAL  (cut points pre-registered from our own corpus)
+--------------------------------------------------------------------
+  cut points (our corpus tertiles): 18.75, 31.25
+  chosen without reference to any external label -- nothing fitted
+  Macro-F1                        : 0.321
+  quadratic-weighted kappa        : 0.339
+  accuracy                        : 0.361
+
+--------------------------------------------------------------------
+THRESHOLD-FIT  (30% fit / 70% held out -- fitted, and labelled as such)
+--------------------------------------------------------------------
+  fit on n=300, tested on n=699
+  fitted cut points               : 31.25, 56.25
+  Macro-F1  (held out)            : 0.573
+  quadratic-weighted kappa (held out): 0.538
+  accuracy  (held out)            : 0.704

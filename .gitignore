@@ -11,3 +11,7 @@ __pycache__/
 # Note: no files currently exceed 10MB (checked at time of writing), so no
 # size-based patterns are listed here. data/download_errors.csv is kept
 # tracked -- it documents data collection provenance and is well under 10MB.
+
+# Third-party evaluation corpora: redistributed under their own licences
+# (QEvasion is CC-BY-NC-ND). Fetch with src/score_external.py instead.
+data/external/
