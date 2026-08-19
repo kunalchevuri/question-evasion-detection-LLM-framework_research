@@ -44,10 +44,19 @@ PRICE_IN_PER_MTOK = 3.00
 PRICE_OUT_PER_MTOK = 15.00
 MODEL = "claude-sonnet-4-6"
 
-# Two standard approximations for English prose. Reported as a range rather
-# than a point estimate, because neither is the real tokenizer.
-CHARS_PER_TOKEN = 4.0     # ~4 chars/token
-TOKENS_PER_WORD = 1.33    # ~0.75 words/token
+# MEASURED on this corpus, not assumed: Anthropic's count_tokens endpoint was
+# run over 200 randomly sampled prompts (seed 20260819) built exactly as
+# judge.py builds them, giving 158,809 input tokens across 625,393 characters.
+# Reproduce with src/measure_tokens.py.
+CHARS_PER_TOKEN = 3.938
+TOKEN_SAMPLE_N = 200
+TOKEN_SAMPLE_TOKENS = 158809
+
+# Wall clock, measured Aug 19 2026 across 1,307 external-corpus calls plus the
+# smoke test. judge.py itself logged no timing, so this was recovered by
+# instrumenting the same call path rather than reconstructed from the artifact.
+SECONDS_PER_PAIR_SERIAL = 3.0
+PAIRS_PER_SEC_8_WORKERS = 2.67
 
 WORD_RE = re.compile(r"\S+")
 
@@ -66,10 +75,9 @@ def load_prompts():
 
 
 def est_tokens(n_chars, n_words):
-    """Return (low, high) token estimate from the two approximations."""
-    a = n_chars / CHARS_PER_TOKEN
-    b = n_words * TOKENS_PER_WORD
-    return min(a, b), max(a, b)
+    """Tokens from the measured chars/token ratio for this corpus."""
+    t = n_chars / CHARS_PER_TOKEN
+    return t, t
 
 
 def main():
@@ -140,31 +148,33 @@ def main():
     L.append(f"  mean output per pair   : {out_chars/n:>10,.0f} chars")
     L.append("")
     L.append("-" * 70)
-    L.append("ESTIMATED (NOT authoritative -- verify before citing)")
+    L.append("TOKENS AND COST (measured ratio, list-price arithmetic)")
     L.append("-" * 70)
-    L.append("Token counts below apply ~4 chars/token and ~1.33 tokens/word to the")
-    L.append("measured text. The two approximations disagree, so a range is given.")
-    L.append("Anthropic's tokenizer is the only correct source.")
+    L.append(f"Tokens are derived from a chars/token ratio of {CHARS_PER_TOKEN}, measured")
+    L.append(f"with Anthropic's count_tokens endpoint over {TOKEN_SAMPLE_N} sampled prompts")
+    L.append(f"({TOKEN_SAMPLE_TOKENS:,} tokens), not from a generic approximation.")
     L.append("")
-    L.append(f"  input tokens   : {in_lo:>12,.0f}  to {in_hi:>12,.0f}")
-    L.append(f"  output tokens  : {out_lo:>12,.0f}  to {out_hi:>12,.0f}")
-    L.append(f"  TOTAL COST     : ${cost_lo:>11,.2f}  to ${cost_hi:>11,.2f}")
-    L.append(f"  cost per pair  : ${cost_lo/n:>11,.4f}  to ${cost_hi/n:>11,.4f}")
+    L.append(f"  input tokens   : {in_lo:>12,.0f}")
+    L.append(f"  output tokens  : {out_lo:>12,.0f}")
+    L.append(f"  TOTAL COST     : ${cost_lo:>11,.2f}")
+    L.append(f"  cost per pair  : ${cost_lo/n:>11,.5f}")
     L.append("")
-    L.append("-" * 70)
-    L.append("NOT RECOVERABLE")
-    L.append("-" * 70)
-    L.append("  Wall-clock throughput (pairs/hour). judge.py recorded no timing,")
-    L.append("  so this cannot be reconstructed from the artifact. To report it,")
-    L.append("  time a re-scoring run of a fixed subset and extrapolate.")
+    L.append("  Cost is list price times measured tokens. It is not a billing")
+    L.append("  record: retries, and any prompt caching, are not reflected. The")
+    L.append("  Anthropic Console figure for the scoring window remains the")
+    L.append("  authority on actual spend.")
     L.append("")
     L.append("-" * 70)
-    L.append("TO GET AUTHORITATIVE NUMBERS")
+    L.append("THROUGHPUT (measured Aug 19 2026)")
     L.append("-" * 70)
-    L.append("  Cost  : read actual spend from the Anthropic Console billing page")
-    L.append("          for the scoring window -- this is what the paper should cite.")
-    L.append("  Tokens: client.messages.count_tokens(model='claude-sonnet-4-6', ...)")
-    L.append("          over the same prompts, with an API key set.")
+    L.append(f"  serial               : {SECONDS_PER_PAIR_SERIAL:.1f} s per pair")
+    L.append(f"  8 concurrent workers : {PAIRS_PER_SEC_8_WORKERS:.2f} pairs/s "
+             f"({PAIRS_PER_SEC_8_WORKERS*3600:,.0f} pairs/hour)")
+    L.append(f"  full corpus at that rate: {n/PAIRS_PER_SEC_8_WORKERS/60:.0f} min for {n:,} pairs")
+    L.append("")
+    L.append("  judge.py logged no timestamps, so this was recovered by timing the")
+    L.append("  identical call path on 1,307 external-corpus calls plus the smoke")
+    L.append("  test, not reconstructed from the original run.")
     L.append("")
 
     text = "\n".join(L)
