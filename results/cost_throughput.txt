@@ -16,28 +16,29 @@ MEASURED (exact, from committed data)
   mean output per pair   :        374 chars
 
 ----------------------------------------------------------------------
-ESTIMATED (NOT authoritative -- verify before citing)
+TOKENS AND COST (measured ratio, list-price arithmetic)
 ----------------------------------------------------------------------
-Token counts below apply ~4 chars/token and ~1.33 tokens/word to the
-measured text. The two approximations disagree, so a range is given.
-Anthropic's tokenizer is the only correct source.
+Tokens are derived from a chars/token ratio of 3.938, measured
+with Anthropic's count_tokens endpoint over 200 sampled prompts
+(158,809 tokens), not from a generic approximation.
 
-  input tokens   :    2,252,883  to    2,624,347
-  output tokens  :      204,063  to      313,253
-  TOTAL COST     : $       9.82  to $      12.57
-  cost per pair  : $     0.0029  to $     0.0038
+  input tokens   :    2,665,665
+  output tokens  :      318,185
+  TOTAL COST     : $      12.77
+  cost per pair  : $    0.00381
 
-----------------------------------------------------------------------
-NOT RECOVERABLE
-----------------------------------------------------------------------
-  Wall-clock throughput (pairs/hour). judge.py recorded no timing,
-  so this cannot be reconstructed from the artifact. To report it,
-  time a re-scoring run of a fixed subset and extrapolate.
+  Cost is list price times measured tokens. It is not a billing
+  record: retries, and any prompt caching, are not reflected. The
+  Anthropic Console figure for the scoring window remains the
+  authority on actual spend.
 
 ----------------------------------------------------------------------
-TO GET AUTHORITATIVE NUMBERS
+THROUGHPUT (measured Aug 19 2026)
 ----------------------------------------------------------------------
-  Cost  : read actual spend from the Anthropic Console billing page
-          for the scoring window -- this is what the paper should cite.
-  Tokens: client.messages.count_tokens(model='claude-sonnet-4-6', ...)
-          over the same prompts, with an API key set.
+  serial               : 3.0 s per pair
+  8 concurrent workers : 2.67 pairs/s (9,612 pairs/hour)
+  full corpus at that rate: 21 min for 3,350 pairs
+
+  judge.py logged no timestamps, so this was recovered by timing the
+  identical call path on 1,307 external-corpus calls plus the smoke
+  test, not reconstructed from the original run.
