@@ -1,0 +1,68 @@
+Factor structure of the four evasion dimensions
+======================================================================
+n = 3,350 scored pairs, p = 4 dimensions
+
+Correlation matrix
+----------------------------------------------------------------------
+                    non_responsiveness  vagueness  deflection  hedging
+non_responsiveness               1.000      0.725       0.712    0.446
+vagueness                        0.725      1.000       0.521    0.547
+deflection                       0.712      0.521       1.000    0.244
+hedging                          0.446      0.547       0.244    1.000
+
+Bartlett sphericity : chi2 = 6,131.6, p = 0 (factorable)
+KMO overall         : 0.713 (adequate)
+
+----------------------------------------------------------------------
+1. PARALLEL ANALYSIS (Horn) -- how many factors are supported?
+----------------------------------------------------------------------
+factor      eigenvalue   random mean   random p95   retain?
+1                2.628         1.039        1.062   YES
+2                0.801         1.011        1.025   no
+3                0.360         0.988        1.000   no
+4                0.211         0.962        0.980   no
+
+  Factors retained: 1
+
+----------------------------------------------------------------------
+2. ONE-FACTOR EFA (identified: df = 2)
+----------------------------------------------------------------------
+                       F1  communality
+non_responsiveness -0.937        0.878
+vagueness          -0.823        0.677
+deflection         -0.671        0.450
+hedging            -0.514        0.265
+
+  variance explained by F1: 56.7%
+
+----------------------------------------------------------------------
+3. TWO-FACTOR SOLUTION -- UNDER-IDENTIFIED (df = -1)
+----------------------------------------------------------------------
+  Reported for completeness ONLY. With 4 indicators and 2 factors the
+  model has negative degrees of freedom, so this is one of infinitely
+  many equivalent solutions. It cannot confirm a hypothesised structure
+  and must not be presented as if it did.
+
+                       F1     F2
+non_responsiveness  0.750  0.236
+vagueness           0.296  0.633
+deflection          0.903 -0.143
+hedging            -0.115  0.761
+
+----------------------------------------------------------------------
+WHAT THE DATA ACTUALLY SHOWS
+----------------------------------------------------------------------
+  Strongest pair : non_responsiveness-vagueness  r = 0.725
+                   non_responsiveness-deflection r = 0.712
+  Weakest pair   : deflection-hedging            r = 0.244
+
+  Hedging is the least redundant dimension: it correlates only 0.24
+  with deflection while the other three inter-correlate at 0.52-0.73.
+  That is the descriptive pattern behind the predicted 'directness vs
+  hedging' split, and it is reportable as a correlation result.
+
+  BUT parallel analysis retains only ONE factor. The predicted
+  two-factor structure is NOT confirmed. Report the correlation
+  pattern descriptively and drop the two-factor claim -- with four
+  indicators it is not testable here regardless of what the data
+  looked like. Adding dimensions in future work would make it so.

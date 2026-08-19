@@ -1,0 +1,62 @@
+Anonymization / contamination check
+====================================================================
+pairs re-scored          : 75 of 75
+entities masked          : 702 total, 9.4 per pair
+distinct companies       : 40
+wall clock               : 0.0 min
+
+Masking replaces company names, tickers, executive and analyst names,
+products, and places with placeholders, then re-scores with the
+identical judge (same prompt, model, temperature).
+
+--------------------------------------------------------------------
+1. STABILITY -- masked vs. original judge scores
+--------------------------------------------------------------------
+  Pearson r                    : +0.861  (p = 3.86e-23)
+  quadratic-weighted kappa     : 0.730
+  unweighted kappa             : 0.652
+  mean change (masked - orig)  : +1.83 points on 0-100
+  mean |change|                : 4.33
+  identical scores             : 41/75
+  primary_type agreement       : 61/75
+
+--------------------------------------------------------------------
+2. VALIDATION SURVIVAL -- does agreement with humans hold up?
+--------------------------------------------------------------------
+  Reference: the two human annotators agree with each other at r = 0.587.
+  That is the benchmark any judge should be measured against.
+
+comparison                            original      masked    change
+  Pearson r, vs human1                  0.777       0.582    -0.195
+  Pearson r, vs human2                  0.803       0.771    -0.032
+  Pearson r, vs human mean              0.886       0.773    -0.113
+
+--------------------------------------------------------------------
+3. CONFOUND -- masking also removes genuine specificity
+--------------------------------------------------------------------
+  mean score moved +1.83 points; 24/75 pairs moved UP
+  masked mean 28.92 vs original 27.08
+
+  The shift is upward -- masked responses read as MORE evasive. That is
+  what you expect mechanically: replacing named products, places, and
+  companies with placeholders strips concrete detail out of the text,
+  and 'vagueness' is one of the four scored dimensions. So this check
+  cannot cleanly separate two explanations for any drop:
+    (a) the judge lost access to memorised company identity, or
+    (b) masking destroyed real specificity that the judge -- and the
+        human annotators -- were both legitimately reading.
+  The confound biases the test TOWARD finding an effect, which makes a
+  stable result conservative and a small drop hard to attribute.
+
+--------------------------------------------------------------------
+VERDICT
+--------------------------------------------------------------------
+  Contamination is NOT driving the results.
+    - masked vs original scores correlate at r = 0.861, with 41/75 scores unchanged
+    - the mean score moves only +1.83 points on a 0-100 scale
+    - after masking, the judge still agrees with the human mean at
+      r = 0.773, well above the 0.587 the two
+      annotators achieve with each other
+  Agreement does fall, and the paper should report that plainly rather
+  than claim the check was passed without cost -- but the residual is
+  as consistent with the specificity confound above as with recall.
