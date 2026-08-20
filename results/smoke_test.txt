@@ -1,0 +1,28 @@
+Smoke test: re-scoring 10 previously-scored pairs
+model=claude-sonnet-4-6  temperature=0  max_tokens=300  seed=20260819
+
+  [1/10] committed= 12.50  fresh= 12.50  delta= +0.00
+  [2/10] committed= 31.25  fresh= 43.75  delta=+12.50
+  [3/10] committed=  0.00  fresh=  0.00  delta= +0.00
+  [4/10] committed= 25.00  fresh= 25.00  delta= +0.00
+  [5/10] committed=  6.25  fresh= 12.50  delta= +6.25
+  [6/10] committed= 18.75  fresh= 18.75  delta= +0.00
+  [7/10] committed= 43.75  fresh= 50.00  delta= +6.25
+  [8/10] committed= 37.50  fresh= 37.50  delta= +0.00
+  [9/10] committed= 12.50  fresh= 12.50  delta= +0.00
+  [10/10] committed= 12.50  fresh= 12.50  delta= +0.00
+
+==============================================================
+SMOKE TEST RESULT
+==============================================================
+  scored / failed        : 10 / 0
+  identical evasion_score: 7/10
+  mean |delta|           : 2.50 points (0-100 scale)
+  max  |delta|           : 12.50
+  dimension-level exact  : 36/40 (90%)
+  primary_type agreement : 8/10
+  correlation old vs new : r = 0.968
+  wall clock             : 28.7s (2.9s per pair)
+
+  VERDICT: CLEAR -- model behavior consistent with the committed run.
+==============================================================
