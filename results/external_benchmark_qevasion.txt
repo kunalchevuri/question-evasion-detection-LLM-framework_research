@@ -29,8 +29,14 @@ ZERO-SHOT ORDINAL  (cut points pre-registered from our own corpus)
 --------------------------------------------------------------------
 THRESHOLD-FIT  (30% fit / 70% held out -- fitted, and labelled as such)
 --------------------------------------------------------------------
-  fit on n=92, tested on n=216
-  fitted cut points               : 37.50, 75.00
-  Macro-F1  (held out)            : 0.472
-  quadratic-weighted kappa (held out): 0.320
-  accuracy  (held out)            : 0.611
+Repeated over 200 random splits rather than reported from one.
+A single split of this size carries roughly 0.03 SD in held-out Macro-F1,
+enough that one draw can look materially better or worse than the method
+actually is. The candidate cut-point grid is built from the FIT half only,
+so the held-out scores inform nothing.
+
+  fit on n=92, tested on n=216, x200 splits
+  median fitted cut points        : 37.50, 71.56
+  Macro-F1  (held out)            : 0.447 (SD 0.030) [5th 0.395, 95th 0.488]
+  quadratic-weighted kappa        : 0.310 (SD 0.045)
+  accuracy  (held out)            : 0.578 (SD 0.047)

@@ -16,8 +16,8 @@ mean judge score by external label (monotone = the measure orders correctly)
 THRESHOLD-FREE  (no cut points -- the safest numbers)
 --------------------------------------------------------------------
   Spearman rho vs ordinal label : +0.615  (p = 4.32e-105)
-  AUROC, 'fully_evasive' vs rest  : 0.856  [95% CI 0.771, 0.926]   (23 positives)
-  AUROC, any-evasion vs direct   : 0.849  [95% CI 0.825, 0.871]
+  AUROC, 'fully_evasive' vs rest  : 0.856  [95% CI 0.770, 0.928]   (23 positives)
+  AUROC, any-evasion vs direct   : 0.849  [95% CI 0.826, 0.872]
 
 --------------------------------------------------------------------
 ZERO-SHOT ORDINAL  (cut points pre-registered from our own corpus)
@@ -31,8 +31,14 @@ ZERO-SHOT ORDINAL  (cut points pre-registered from our own corpus)
 --------------------------------------------------------------------
 THRESHOLD-FIT  (30% fit / 70% held out -- fitted, and labelled as such)
 --------------------------------------------------------------------
-  fit on n=300, tested on n=699
-  fitted cut points               : 31.25, 56.25
-  Macro-F1  (held out)            : 0.573
-  quadratic-weighted kappa (held out): 0.538
-  accuracy  (held out)            : 0.704
+Repeated over 200 random splits rather than reported from one.
+A single split of this size carries roughly 0.03 SD in held-out Macro-F1,
+enough that one draw can look materially better or worse than the method
+actually is. The candidate cut-point grid is built from the FIT half only,
+so the held-out scores inform nothing.
+
+  fit on n=300, tested on n=699, x200 splits
+  median fitted cut points        : 31.09, 56.25
+  Macro-F1  (held out)            : 0.595 (SD 0.022) [5th 0.563, 95th 0.638]
+  quadratic-weighted kappa        : 0.551 (SD 0.014)
+  accuracy  (held out)            : 0.723 (SD 0.016)
