@@ -1,0 +1,26 @@
+Length as a confound: does the judge just count words?
+====================================================================
+Spearman rho against the external ordinal label, for raw response
+length and for the judge's evasion score, on identical items.
+
+--------------------------------------------------------------------
+EvasionBench  (n = 999)
+--------------------------------------------------------------------
+  median response length          : 131 words
+  length      vs. external label  : rho = +0.098  (p = 0.00194)
+  judge score vs. external label  : rho = +0.615  (p = 4.32e-105)
+  length      vs. judge score     : rho = +0.304  (p = 9.45e-23)
+
+--------------------------------------------------------------------
+CLARITY / QEvasion  (n = 308)
+--------------------------------------------------------------------
+  median response length          : 292 words
+  length      vs. external label  : rho = -0.033  (p = 0.562)
+  judge score vs. external label  : rho = +0.398  (p = 3.7e-13)
+  length      vs. judge score     : rho = +0.065  (p = 0.252)
+
+====================================================================
+READ: where length carries essentially no rank information about the
+label and the judge carries a great deal, the score is not a verbosity
+proxy. Any residual length-score correlation is expected and benign --
+terse non-answers are genuinely shorter than substantive ones.

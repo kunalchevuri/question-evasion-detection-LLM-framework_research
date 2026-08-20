@@ -33,9 +33,11 @@ LABELS = {
     "human1_vs_human2": "Human1-Human2",
     "claude_vs_human1": "Claude-Human1",
     "claude_vs_human2": "Claude-Human2",
-    "human1_vs_groq_llama": "Groq-Human1",
-    "human2_vs_groq_llama": "Groq-Human2",
-    "claude_vs_groq_llama": "Claude-Groq",
+    # Label by model, not by serving provider: Groq serves Llama-3.3-70B, it
+    # is not the judge. Keeps the axis consistent with the body text.
+    "human1_vs_groq_llama": "Llama-Human1",
+    "human2_vs_groq_llama": "Llama-Human2",
+    "claude_vs_groq_llama": "Claude-Llama",
 }
 
 
