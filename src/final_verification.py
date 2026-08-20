@@ -640,5 +640,19 @@ def main():
                       bootstrap_stats)
 
 
+def _dump_log():
+    """Persist the full run log.
+
+    Several numbers cited in the manuscript -- the 5-fold CV means and the
+    power-analysis figures among them -- are produced here and were previously
+    only printed. Writing them to results/ means every cited value lives in a
+    committed artifact rather than requiring a re-run to confirm.
+    """
+    out = RESULTS_DIR / "final_verification_log.txt"
+    out.write_text("\n".join(_LOG), encoding="utf-8")
+    print(f"\nWrote {out}")
+
+
 if __name__ == "__main__":
     main()
+    _dump_log()

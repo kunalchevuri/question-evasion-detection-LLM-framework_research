@@ -242,16 +242,21 @@ Hedging              & 0.446 & 0.547 & 0.244 & 1.000 \\
 
 \begin{table}[t]
 \centering
-\caption{Illustrative Application: Out-of-Sample AUROC by Configuration}
+\caption{Illustrative Application: Out-of-Sample AUROC by Configuration, with 5-Fold Cross-Validated Means}
 \label{tab:auroc}
 \begin{tabular}{lrr}
 \toprule
-Configuration & LR AUROC & XGB AUROC \\
+Configuration & LR & XGB \\
 \midrule
+\multicolumn{3}{l}{\emph{Chronological hold-out}} \\
 A: Accounting only & 0.486 & 0.512 \\
 B: A + LM sentiment & 0.608 & 0.414 \\
 C: B + mean evasion & 0.642 & 0.420 \\
 D: B + all evasion measures & 0.629 & 0.384 \\
+\midrule
+\multicolumn{3}{l}{\emph{5-fold cross-validation, mean (SD)}} \\
+B & 0.508 (0.165) & 0.528 (0.084) \\
+C & 0.508 (0.136) & 0.529 (0.075) \\
 \bottomrule
 \end{tabular}
 \\[4pt]
@@ -261,30 +266,11 @@ D: B + all evasion measures & 0.629 & 0.384 \\
 \section{Robustness and Additional Analysis}
 \label{sec:robustness}
 
-We ran 5-fold stratified cross-validation on Configs B and C (Table~\ref{tab:cv}) to characterize the null result rigorously rather than reporting a single specification. Mean AUROC is statistically indistinguishable across configurations for both model types, and fold-to-fold SD (0.075--0.165) dwarfs the single-split point estimate, confirming the result reflects sampling variance rather than a stable effect.
+We ran 5-fold stratified cross-validation on Configs B and C (Table~\ref{tab:auroc}) to characterize the null result rigorously rather than reporting a single specification. Mean AUROC is statistically indistinguishable across configurations for both model types, and fold-to-fold SD (0.075--0.165) dwarfs the single-split point estimate, confirming the result reflects sampling variance rather than a stable effect.
 
-A further check addresses the imputation disclosed in Section~ef{sec:methodology}: gross margin is observed for 109 of 155 panel observations and operating margin for 113, with the remainder filled from training-set medians. Restricting the panel to the 79 observations where both margins are genuinely observed leaves the null intact---no evasion measure approaches significance (Pearson $p = 0.43$ to $0.90$; Spearman $p = 0.48$ to $0.83$)---so the result is not an artifact of imputation. Because the 2015--2023 sample spans a period of extreme, largely firm-independent volatility, we re-estimated all specifications excluding 2020 (25 observations); results are essentially unchanged ($r = 0.002$, $p = 0.982$, $n = 130$; AUROC shifts of 0.01 or less), so the null result is not a COVID-era artifact. A post-hoc power analysis indicates that at $n = 155$, this design has 7.0, 12.9, 34.4, and 66.4 percent power to detect true AUROC differences of 0.02, 0.05, 0.10, and 0.15 respectively, none reaching conventional thresholds: the data rule out a moderate-to-large effect but remain underpowered for smaller ones, a limitation of sample size rather than of the framework itself. A SHapley Additive exPlanations analysis of the best XGBoost specification ranks return on assets as most influential, followed by revenue growth and the two margin measures, with evasion measures absent from that configuration entirely, consistent with the cross-validated null result.
+A further check addresses the imputation disclosed in Section~
+ef{sec:methodology}: gross margin is observed for 109 of 155 panel observations and operating margin for 113, with the remainder filled from training-set medians. Restricting the panel to the 79 observations where both margins are genuinely observed leaves the null intact---no evasion measure approaches significance (Pearson $p = 0.43$ to $0.90$; Spearman $p = 0.48$ to $0.83$)---so the result is not an artifact of imputation. Because the 2015--2023 sample spans a period of extreme, largely firm-independent volatility, we re-estimated all specifications excluding 2020 (25 observations); results are essentially unchanged ($r = 0.002$, $p = 0.982$, $n = 130$; AUROC shifts of 0.01 or less), so the null result is not a COVID-era artifact. A post-hoc power analysis indicates that at $n = 155$, this design has 7.0, 12.9, 34.4, and 66.4 percent power to detect true AUROC differences of 0.02, 0.05, 0.10, and 0.15 respectively, none reaching conventional thresholds: the data rule out a moderate-to-large effect but remain underpowered for smaller ones, a limitation of sample size rather than of the framework itself. A SHapley Additive exPlanations analysis of the best XGBoost specification ranks return on assets as most influential, followed by revenue growth and the two margin measures, with evasion measures absent from that configuration entirely, consistent with the cross-validated null result.
 
-\begin{table}[t]
-\centering
-\caption{5-Fold Cross-Validation AUROC, Configs B and C}
-\label{tab:cv}
-\begin{tabular}{lrrrr}
-\toprule
-& \multicolumn{2}{c}{Logistic Regression} & \multicolumn{2}{c}{XGBoost} \\
-Fold & Config B & Config C & Config B & Config C \\
-\midrule
-1 & 0.483 & 0.425 & 0.579 & 0.533 \\
-2 & 0.313 & 0.358 & 0.413 & 0.433 \\
-3 & 0.708 & 0.621 & 0.558 & 0.558 \\
-4 & 0.642 & 0.679 & 0.471 & 0.488 \\
-5 & 0.396 & 0.458 & 0.617 & 0.633 \\
-\midrule
-Mean & 0.508 & 0.508 & 0.528 & 0.529 \\
-SD & 0.165 & 0.136 & 0.084 & 0.075 \\
-\bottomrule
-\end{tabular}
-\end{table}
 
 Because the 155-observation panel spans only 32 firms with repeated observations per firm, standard errors that ignore this clustering may understate uncertainty. We re-estimated the Config C logistic specification with standard errors clustered by firm: the coefficient on mean evasion score remains non-significant under both naive ($p = 0.083$) and firm-clustered ($p = 0.054$) standard errors, confirming the null result is not an artifact of ignoring within-firm correlation.
 

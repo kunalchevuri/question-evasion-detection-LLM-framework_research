@@ -68,14 +68,22 @@ def best_cuts(score, y, grid):
     return argbest
 
 
-def auroc_ci(y_bin, score, n_boot=2000):
+def auroc_ci(y_bin, score, n_boot=2000, seed=20260819):
+    """Bootstrap CI with its own generator.
+
+    Previously this drew from the module-level RNG, which made the interval
+    depend on how much randomness earlier code had already consumed -- editing
+    an unrelated analysis silently shifted the published CI. It now seeds
+    locally so the interval is a function of the data alone.
+    """
     if len(np.unique(y_bin)) < 2:
         return float("nan"), (float("nan"), float("nan"))
+    rng = np.random.default_rng(seed)
     point = roc_auc_score(y_bin, score)
     idx = np.arange(len(y_bin))
     boots = []
     for _ in range(n_boot):
-        b = RNG.choice(idx, size=len(idx), replace=True)
+        b = rng.choice(idx, size=len(idx), replace=True)
         if len(np.unique(y_bin[b])) < 2:
             continue
         boots.append(roc_auc_score(y_bin[b], score[b]))
@@ -117,6 +125,26 @@ def analyse(corpus):
         sub = score[df["ext_label"].to_numpy() == lab]
         log(f"  {lab:<18} n={len(sub):<5} mean={sub.mean():7.2f}  SD={sub.std(ddof=1):6.2f}")
     log("")
+
+    if corpus == "qevasion":
+        import itertools
+        from sklearn.metrics import cohen_kappa_score as _ck
+        src = BASE_DIR / "data" / "external" / "qevasion_test.csv"
+        if src.exists():
+            ann = pd.read_csv(src)[["annotator1", "annotator2", "annotator3"]].dropna()
+            labs = sorted(set(ann.to_numpy().ravel()))
+            ks = [_ck(ann[a], ann[b], labels=labs)
+                  for a, b in itertools.combinations(ann.columns, 2)]
+            log("-" * 68)
+            log("HUMAN CEILING  (their own annotators, on their own labels)")
+            log("-" * 68)
+            log(f"  n with all three annotators   : {len(ann)}")
+            for (a, b), k in zip(itertools.combinations(ann.columns, 2), ks):
+                log(f"  {a} vs {b:<12}: Cohen kappa = {k:.3f}")
+            log(f"  MEAN pairwise kappa           : {np.mean(ks):.3f}")
+            log(f"  all three identical           : "
+                f"{(ann.nunique(axis=1) == 1).mean()*100:.1f}%")
+            log("")
 
     log("-" * 68)
     log("THRESHOLD-FREE  (no cut points -- the safest numbers)")
