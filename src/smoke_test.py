@@ -12,6 +12,8 @@ external-benchmark number would be measured on a different instrument than the
 one the paper describes, and we need to know that before spending API budget.
 
 Nothing is written to data/ -- the committed evasion_scores.csv is read only.
+The console transcript is mirrored to results/smoke_test.txt so the go/no-go
+gate leaves a durable artifact rather than living only in a terminal buffer.
 
 Usage:
     python src/smoke_test.py            # 10 pairs
@@ -19,6 +21,8 @@ Usage:
 """
 
 import argparse
+import contextlib
+import io
 import os
 import sys
 import time
@@ -30,6 +34,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BASE_DIR / "src"))
 
 SCORES_CSV = BASE_DIR / "data" / "parsed_qa" / "evasion_scores.csv"
+OUT = BASE_DIR / "results" / "smoke_test.txt"
 DIMS = ["non_responsiveness", "vagueness", "deflection", "hedging"]
 
 
@@ -130,5 +135,32 @@ def main():
     print("=" * 62)
 
 
+class _Tee:
+    """Write to the real stdout and to a buffer, so the run is both watchable
+    live and recoverable afterwards."""
+
+    def __init__(self, stream, buf):
+        self._stream, self._buf = stream, buf
+
+    def write(self, s):
+        self._stream.write(s)
+        self._buf.write(s)
+        return len(s)
+
+    def flush(self):
+        self._stream.flush()
+
+
 if __name__ == "__main__":
-    main()
+    buf = io.StringIO()
+    status = 0
+    try:
+        with contextlib.redirect_stdout(_Tee(sys.stdout, buf)):
+            main()
+    except SystemExit as exc:
+        buf.write(chr(10) + "SystemExit: %s" % exc + chr(10))
+        status = 1
+    OUT.parent.mkdir(exist_ok=True)
+    OUT.write_text(buf.getvalue(), encoding="utf-8")
+    print(f"Wrote {OUT}")
+    sys.exit(status)
