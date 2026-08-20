@@ -11,11 +11,21 @@ mean judge score by external label (monotone = the measure orders correctly)
   Clear Non-Reply    n=23    mean=  58.70  SD= 17.14
 
 --------------------------------------------------------------------
+HUMAN CEILING  (their own annotators, on their own labels)
+--------------------------------------------------------------------
+  n with all three annotators   : 308
+  annotator1 vs annotator2  : Cohen kappa = 0.353
+  annotator1 vs annotator3  : Cohen kappa = 0.531
+  annotator2 vs annotator3  : Cohen kappa = 0.546
+  MEAN pairwise kappa           : 0.477
+  all three identical           : 40.6%
+
+--------------------------------------------------------------------
 THRESHOLD-FREE  (no cut points -- the safest numbers)
 --------------------------------------------------------------------
   Spearman rho vs ordinal label : +0.398  (p = 3.7e-13)
   AUROC, 'Clear Non-Reply' vs rest  : 0.741  [95% CI 0.639, 0.835]   (23 positives)
-  AUROC, any-evasion vs direct   : 0.738  [95% CI 0.680, 0.793]
+  AUROC, any-evasion vs direct   : 0.738  [95% CI 0.677, 0.795]
 
 --------------------------------------------------------------------
 ZERO-SHOT ORDINAL  (cut points pre-registered from our own corpus)

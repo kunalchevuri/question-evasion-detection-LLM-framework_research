@@ -16,8 +16,8 @@ mean judge score by external label (monotone = the measure orders correctly)
 THRESHOLD-FREE  (no cut points -- the safest numbers)
 --------------------------------------------------------------------
   Spearman rho vs ordinal label : +0.615  (p = 4.32e-105)
-  AUROC, 'fully_evasive' vs rest  : 0.856  [95% CI 0.770, 0.928]   (23 positives)
-  AUROC, any-evasion vs direct   : 0.849  [95% CI 0.826, 0.872]
+  AUROC, 'fully_evasive' vs rest  : 0.856  [95% CI 0.771, 0.926]   (23 positives)
+  AUROC, any-evasion vs direct   : 0.849  [95% CI 0.826, 0.871]
 
 --------------------------------------------------------------------
 ZERO-SHOT ORDINAL  (cut points pre-registered from our own corpus)
