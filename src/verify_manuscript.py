@@ -100,6 +100,11 @@ check("cost per pair 0.0038", "0.0038", "cost_throughput.txt")
 check("3.0 s per pair", "3.0 seconds per pair", "cost_throughput.txt")
 check("2.67 pairs/s", "2.67", "cost_throughput.txt")
 
+# --------------------------------------------------- panel robustness ------
+check("complete-margin n=79", "79 observations", "panel_robustness_extra.txt")
+check("gross margin 109", "109 of 155", "master_panel.csv")
+check("operating margin 113", "113", "master_panel.csv")
+
 # ------------------------------------------------------------- integrity ----
 extra = []
 # The 11 percent non-answer rate belongs to Gow et al.; the paper refers back
