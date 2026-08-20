@@ -100,6 +100,22 @@ check("cost per pair 0.0038", "0.0038", "cost_throughput.txt")
 check("3.0 s per pair", "3.0 seconds per pair", "cost_throughput.txt")
 check("2.67 pairs/s", "2.67", "cost_throughput.txt")
 
+# ------------------------------------------------------- length confound ----
+# Section VI's verbosity check. Needles are read back out of the results file
+# rather than hardcoded, so if the analysis is re-run and the numbers move,
+# this fails instead of silently agreeing with stale prose.
+lc = (RES / "length_confound.txt").read_text(encoding="utf-8")
+for corpus in ("EvasionBench", "CLARITY"):
+    block = lc.split(corpus, 1)[1]
+    for what, pat in (("label", "external label"), ("score", "judge score")):
+        v = re.search(r"length\s+vs\. " + pat + r"\s+: rho = ([+-])(\d\.\d{3})",
+                      block)
+        sign, mag = v.group(1), v.group(2)
+        # the manuscript writes the sign only where it is informative
+        needle = mag if sign == "+" and what == "score" else sign + mag
+        check("%s length-vs-%s rho %s%s" % (corpus, what, sign, mag),
+              needle, "length_confound.txt")
+
 # --------------------------------------------------- panel robustness ------
 check("complete-margin n=79", "79 observations", "panel_robustness_extra.txt")
 check("gross margin 109", "109 of 155", "master_panel.csv")
