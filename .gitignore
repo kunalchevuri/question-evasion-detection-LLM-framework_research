@@ -27,3 +27,6 @@ overleaf/*.out
 overleaf/*.bbl
 overleaf/*.blg
 overleaf/*.synctex.gz
+
+# Claude Code local settings -- contains API keys, never commit
+.claude/
