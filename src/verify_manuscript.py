@@ -63,8 +63,8 @@ check("llm-human2 r 0.803", "0.803", "kappa_statistics.csv")
 
 # ------------------------------------------------- external benchmarks ------
 for corpus, rho, auroc, zf, ff in (
-        ("evasionbench", "+0.615", "0.856", "0.321", "0.573"),
-        ("qevasion", "+0.398", "0.741", "0.163", "0.472")):
+        ("evasionbench", "+0.615", "0.856", "0.321", "0.595"),
+        ("qevasion", "+0.398", "0.741", "0.163", "0.447")):
     src = "external_benchmark_%s.txt" % corpus
     check("%s Spearman %s" % (corpus, rho), rho, src)
     check("%s AUROC %s" % (corpus, auroc), auroc, src)

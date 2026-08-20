@@ -45,6 +45,7 @@ ORDER = {
 }
 HUMAN = {"evasionbench": False, "qevasion": True}
 RNG = np.random.default_rng(20260819)
+N_SPLITS = 200
 
 
 def own_tertiles():
@@ -148,19 +149,37 @@ def analyse(corpus):
     log("-" * 68)
     log("THRESHOLD-FIT  (30% fit / 70% held out -- fitted, and labelled as such)")
     log("-" * 68)
-    idx = RNG.permutation(len(df))
+    log(f"Repeated over {N_SPLITS} random splits rather than reported from one.")
+    log("A single split of this size carries roughly 0.03 SD in held-out Macro-F1,")
+    log("enough that one draw can look materially better or worse than the method")
+    log("actually is. The candidate cut-point grid is built from the FIT half only,")
+    log("so the held-out scores inform nothing.")
+    log("")
+    f1s, qwks, accs, cuts = [], [], [], []
+    for si in range(N_SPLITS):
+        rng = np.random.default_rng(1000 + si)
+        idx = rng.permutation(len(df))
+        k = int(round(0.30 * len(df)))
+        fit_i, test_i = idx[:k], idx[k:]
+        grid = np.unique(np.percentile(score[fit_i], np.arange(5, 100, 2.5)))
+        c1f, c2f = best_cuts(score[fit_i], y[fit_i], grid)
+        pred_t = np.digitize(score[test_i], [c1f, c2f])
+        f1s.append(f1_score(y[test_i], pred_t, average="macro", labels=[0, 1, 2],
+                            zero_division=0))
+        qwks.append(cohen_kappa_score(y[test_i], pred_t, labels=[0, 1, 2],
+                                      weights="quadratic"))
+        accs.append((pred_t == y[test_i]).mean())
+        cuts.append((c1f, c2f))
+    f1s, qwks, accs = np.array(f1s), np.array(qwks), np.array(accs)
     k = int(round(0.30 * len(df)))
-    fit_i, test_i = idx[:k], idx[k:]
-    grid = np.unique(np.percentile(score, np.arange(5, 100, 2.5)))
-    c1f, c2f = best_cuts(score[fit_i], y[fit_i], grid)
-    pred_t = np.digitize(score[test_i], [c1f, c2f])
-    log(f"  fit on n={len(fit_i)}, tested on n={len(test_i)}")
-    log(f"  fitted cut points               : {c1f:.2f}, {c2f:.2f}")
-    log(f"  Macro-F1  (held out)            : "
-        f"{f1_score(y[test_i], pred_t, average='macro', labels=[0,1,2], zero_division=0):.3f}")
-    log(f"  quadratic-weighted kappa (held out): "
-        f"{cohen_kappa_score(y[test_i], pred_t, labels=[0,1,2], weights='quadratic'):.3f}")
-    log(f"  accuracy  (held out)            : {(pred_t == y[test_i]).mean():.3f}")
+    log(f"  fit on n={k}, tested on n={len(df)-k}, x{N_SPLITS} splits")
+    log(f"  median fitted cut points        : "
+        f"{np.median([c[0] for c in cuts]):.2f}, {np.median([c[1] for c in cuts]):.2f}")
+    log(f"  Macro-F1  (held out)            : {f1s.mean():.3f} "
+        f"(SD {f1s.std():.3f}) [5th {np.percentile(f1s,5):.3f}, "
+        f"95th {np.percentile(f1s,95):.3f}]")
+    log(f"  quadratic-weighted kappa        : {qwks.mean():.3f} (SD {qwks.std():.3f})")
+    log(f"  accuracy  (held out)            : {accs.mean():.3f} (SD {accs.std():.3f})")
     log("")
 
     out = RESULTS_DIR / f"external_benchmark_{corpus}.txt"
