@@ -27,6 +27,8 @@ overleaf/*.out
 overleaf/*.bbl
 overleaf/*.blg
 overleaf/*.synctex.gz
+overleaf/*.fdb_latexmk
+overleaf/*.fls
 
 # Claude Code local settings -- contains API keys, never commit
 .claude/
